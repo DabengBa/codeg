@@ -9,6 +9,7 @@ import {
   useRef,
   type ReactNode,
 } from "react"
+import { useTranslations } from "next-intl"
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
 import {
   acpConnect,
@@ -939,69 +940,10 @@ function isAlertedError(error: unknown): error is AlertedError {
   return (error as { alerted?: unknown }).alerted === true
 }
 
-function buildOpenAgentsSettingsAction(agentType?: AgentType): AlertAction {
-  const payload =
-    typeof agentType === "string"
-      ? JSON.stringify({
-          section: "agents",
-          agentType,
-        })
-      : "agents"
-  return {
-    label: "打开 Agents 管理",
-    kind: "open_agents_settings",
-    payload,
-  }
-}
-
-const AGENTS_SETUP_HINT = "点击前往设置 > Agents 管理安装。"
-
-function buildSdkNotInstalledMessage(agentLabel: string): string {
-  return `${agentLabel} SDK 尚未安装`
-}
-
-function buildInstallGuidanceMessage(raw: string): string {
-  const normalized = raw.trim().replace(/[。.!?，,；;：:]+$/u, "")
-  if (!normalized) return AGENTS_SETUP_HINT
-  if (normalized.includes("设置 > Agents 管理安装")) {
-    return `${normalized}。`
-  }
-  return `${normalized}，${AGENTS_SETUP_HINT}`
-}
-
-function buildAutoLinkBlockedReason(agent: AcpAgentInfo | null): string {
-  if (!agent) {
-    return "无法读取当前 Agent 配置。"
-  }
-
-  const agentLabel = AGENT_LABELS[agent.agent_type]
-  if (!agent.enabled) {
-    return `${agentLabel} 已在 Agents 管理中禁用，请先启用后再连接。`
-  }
-
-  if (!agent.available) {
-    return `${agentLabel} 当前平台不可用。`
-  }
-
-  if (agent.installed_version) {
-    return ""
-  }
-
-  switch (agent.distribution_type) {
-    case "binary":
-      return `${buildSdkNotInstalledMessage(agentLabel)}。`
-    case "npx":
-      return `${buildSdkNotInstalledMessage(agentLabel)}。`
-    case "uvx":
-      return `${buildSdkNotInstalledMessage(agentLabel)}。`
-    default:
-      return `${buildSdkNotInstalledMessage(agentLabel)}。`
-  }
-}
-
 // ── Provider ──
 
 export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
+  const t = useTranslations("Folder.chat.acpConnections")
   const { pushAlert } = useAlertContext()
   const pushAlertRef = useRef(pushAlert)
   useEffect(() => {
@@ -1021,6 +963,64 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
 
   // Guard against concurrent connect() calls
   const connectingKeysRef = useRef(new Set<string>())
+
+  type AutoLinkBlockState =
+    | { kind: "none"; reason: "" }
+    | {
+        kind: "missing_config" | "disabled" | "unavailable" | "sdk_missing"
+        reason: string
+      }
+
+  const buildOpenAgentsSettingsAction = useCallback(
+    (agentType?: AgentType): AlertAction => {
+      const payload =
+        typeof agentType === "string"
+          ? JSON.stringify({
+              section: "agents",
+              agentType,
+            })
+          : "agents"
+      return {
+        label: t("actions.openAgentsSettings"),
+        kind: "open_agents_settings",
+        payload,
+      }
+    },
+    [t]
+  )
+
+  const resolveAutoLinkBlockState = useCallback(
+    (agent: AcpAgentInfo | null): AutoLinkBlockState => {
+      if (!agent) {
+        return { kind: "missing_config", reason: t("blocked.missingConfig") }
+      }
+
+      const agentLabel = AGENT_LABELS[agent.agent_type]
+      if (!agent.enabled) {
+        return {
+          kind: "disabled",
+          reason: t("blocked.disabled", { agent: agentLabel }),
+        }
+      }
+
+      if (!agent.available) {
+        return {
+          kind: "unavailable",
+          reason: t("blocked.unavailable", { agent: agentLabel }),
+        }
+      }
+
+      if (agent.installed_version) {
+        return { kind: "none", reason: "" }
+      }
+
+      return {
+        kind: "sdk_missing",
+        reason: t("blocked.sdkMissing", { agent: agentLabel }),
+      }
+    },
+    [t]
+  )
 
   // Activity tracking (no re-renders)
   const lastActivityRef = useRef(new Map<string, number>())
@@ -1456,34 +1456,43 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
             configuredAgent =
               agents.find((agent) => agent.agent_type === agentType) ?? null
           } catch (error) {
-            const reason = `无法读取 Agent 配置：${normalizeErrorMessage(error)}`
+            const reason = t("unableReadAgentConfig", {
+              message: normalizeErrorMessage(error),
+            })
+            const autoLinkFailedTitle = t("autoLinkFailedTitle", {
+              agent: AGENT_LABELS[agentType],
+            })
             pushAlertRef.current(
               "error",
-              `${AGENT_LABELS[agentType]} 自动链接失败`,
-              `${reason}\n${AGENTS_SETUP_HINT}`,
+              autoLinkFailedTitle,
+              `${reason}\n${t("agentsSetupHint")}`,
               [buildOpenAgentsSettingsAction(agentType)]
             )
             throw createAlertedError(reason)
           }
 
-          const blockedReason = buildAutoLinkBlockedReason(configuredAgent)
-          if (blockedReason) {
-            const sdkNotInstalled = blockedReason.includes("SDK 尚未安装")
-            const detail = sdkNotInstalled
-              ? buildInstallGuidanceMessage(blockedReason)
-              : `${blockedReason}\n${AGENTS_SETUP_HINT}`
+          const blocked = resolveAutoLinkBlockState(configuredAgent)
+          if (blocked.kind !== "none") {
+            const autoLinkFailedTitle = t("autoLinkFailedTitle", {
+              agent: AGENT_LABELS[agentType],
+            })
+            const detail =
+              blocked.kind === "sdk_missing"
+                ? t("withSetupHint", {
+                    message: blocked.reason,
+                    hint: t("agentsSetupHint"),
+                  })
+                : `${blocked.reason}\n${t("agentsSetupHint")}`
             pushAlertRef.current(
               "error",
-              sdkNotInstalled
-                ? buildSdkNotInstalledMessage(AGENT_LABELS[agentType])
-                : `${AGENT_LABELS[agentType]} 自动链接失败`,
+              blocked.kind === "sdk_missing"
+                ? blocked.reason
+                : autoLinkFailedTitle,
               detail,
               [buildOpenAgentsSettingsAction(agentType)]
             )
             throw createAlertedError(
-              sdkNotInstalled
-                ? buildSdkNotInstalledMessage(AGENT_LABELS[agentType])
-                : blockedReason
+              blocked.kind === "sdk_missing" ? blocked.reason : blocked.reason
             )
           }
         }
@@ -1501,11 +1510,11 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
               const message =
                 detail.trim().length > 0
                   ? detail
-                  : "预检查未通过，请检查 Agent 配置。"
+                  : t("preflightCheckFailedDefault")
               pushAlertRef.current(
                 "error",
-                `${preflight.agent_name} 自动链接失败`,
-                `${message}\n${AGENTS_SETUP_HINT}`,
+                t("autoLinkFailedTitle", { agent: preflight.agent_name }),
+                `${message}\n${t("agentsSetupHint")}`,
                 [buildOpenAgentsSettingsAction(agentType)]
               )
               throw createAlertedError(message)
@@ -1524,7 +1533,7 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
 
             // Add retry action
             fixes.push({
-              label: "Retry",
+              label: t("actions.retry"),
               kind: "retry_connection",
               payload: JSON.stringify({
                 agentType,
@@ -1536,7 +1545,7 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
 
             pushAlertRef.current(
               "error",
-              `${preflight.agent_name} preflight failed`,
+              t("preflightFailedTitle", { agent: preflight.agent_name }),
               detail,
               fixes
             )
@@ -1547,11 +1556,13 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
             if (isAlertedError(e)) {
               throw e
             }
-            const reason = `自动链接预检查失败：${normalizeErrorMessage(e)}`
+            const reason = t("autoLinkPreflightFailed", {
+              message: normalizeErrorMessage(e),
+            })
             pushAlertRef.current(
               "error",
-              `${AGENT_LABELS[agentType]} 自动链接失败`,
-              `${reason}\n${AGENTS_SETUP_HINT}`,
+              t("autoLinkFailedTitle", { agent: AGENT_LABELS[agentType] }),
+              `${reason}\n${t("agentsSetupHint")}`,
               [buildOpenAgentsSettingsAction(agentType)]
             )
             throw createAlertedError(reason)
@@ -1601,14 +1612,26 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         if (!isAlertedError(err)) {
           const message = normalizeErrorMessage(err)
-          pushAlertRef.current("error", `${agentType} 连接失败`, message)
+          pushAlertRef.current(
+            "error",
+            t("connectFailedTitle", { agent: agentType }),
+            message
+          )
         }
         throw err
       } finally {
         connectingKeysRef.current.delete(contextKey)
       }
     },
-    [consumeBufferedEvents, dispatch, handleMappedEvent, waitForListenerReady]
+    [
+      buildOpenAgentsSettingsAction,
+      consumeBufferedEvents,
+      dispatch,
+      handleMappedEvent,
+      resolveAutoLinkBlockState,
+      t,
+      waitForListenerReady,
+    ]
   )
 
   const disconnect = useCallback(

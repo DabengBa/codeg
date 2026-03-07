@@ -1061,6 +1061,26 @@
       "diffDescriptionConflict": "{path} · disk vs unsaved"
     },
     "chat": {
+      "acpConnections": {
+        "actions": {
+          "openAgentsSettings": "Open Agents settings",
+          "retry": "Retry"
+        },
+        "agentsSetupHint": "Open Settings > Agents to manage installation.",
+        "withSetupHint": "{message}\n{hint}",
+        "blocked": {
+          "missingConfig": "Unable to read current Agent configuration.",
+          "disabled": "{agent} is disabled in Agents settings. Enable it before connecting.",
+          "unavailable": "{agent} is unavailable on the current platform.",
+          "sdkMissing": "{agent} SDK is not installed"
+        },
+        "unableReadAgentConfig": "Unable to read Agent config: {message}",
+        "autoLinkFailedTitle": "{agent} auto-link failed",
+        "preflightCheckFailedDefault": "Preflight checks failed. Check Agent settings.",
+        "preflightFailedTitle": "{agent} preflight failed",
+        "autoLinkPreflightFailed": "Auto-link preflight failed: {message}",
+        "connectFailedTitle": "{agent} connection failed"
+      },
       "connectionLifecycle": {
         "tasks": {
           "connectingTitle": "Connecting to {agent}",
@@ -1201,7 +1221,30 @@
         "promptLabel": "Prompt",
         "subjectLabel": "Subject",
         "taskLabel": "Task",
-        "nameLabel": "Name:"
+        "nameLabel": "Name:",
+        "title": {
+          "edit": "Edit",
+          "command": "Command",
+          "todoWrite": "TodoWrite",
+          "read": "Read",
+          "write": "Write",
+          "notebookEdit": "NotebookEdit",
+          "editFiles": "Edit ({count} files)",
+          "editWithTarget": "Edit {target}",
+          "readWithTarget": "Read {target}",
+          "writeWithTarget": "Write {target}",
+          "notebookEditWithTarget": "NotebookEdit {target}",
+          "globWithPattern": "Glob {pattern}",
+          "grepWithPattern": "Grep {pattern}",
+          "taskCreateWithSubject": "TaskCreate: {subject}",
+          "taskUpdateWithStatus": "TaskUpdate #{id} -> {status}",
+          "taskUpdate": "TaskUpdate #{id}",
+          "webFetchWithUrl": "WebFetch {url}",
+          "webSearchWithQuery": "WebSearch: {query}",
+          "todosProgress": "Todos ({done}/{total})",
+          "skillWithName": "Skill: {name}",
+          "genericWithContext": "{tool}: {context}"
+        }
       }
     },
     "diffPreview": {

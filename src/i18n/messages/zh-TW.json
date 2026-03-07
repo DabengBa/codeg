@@ -1061,6 +1061,26 @@
       "diffDescriptionConflict": "{path} · 磁碟與未儲存內容"
     },
     "chat": {
+      "acpConnections": {
+        "actions": {
+          "openAgentsSettings": "打開 Agents 管理",
+          "retry": "重試"
+        },
+        "agentsSetupHint": "點擊前往設定 > Agents 管理安裝。",
+        "withSetupHint": "{message}\n{hint}",
+        "blocked": {
+          "missingConfig": "無法讀取目前 Agent 設定。",
+          "disabled": "{agent} 已在 Agents 管理中停用，請先啟用後再連線。",
+          "unavailable": "{agent} 目前平台不可用。",
+          "sdkMissing": "{agent} SDK 尚未安裝"
+        },
+        "unableReadAgentConfig": "無法讀取 Agent 設定：{message}",
+        "autoLinkFailedTitle": "{agent} 自動連結失敗",
+        "preflightCheckFailedDefault": "預檢查未通過，請檢查 Agent 設定。",
+        "preflightFailedTitle": "{agent} 預檢查失敗",
+        "autoLinkPreflightFailed": "自動連結預檢查失敗：{message}",
+        "connectFailedTitle": "{agent} 連線失敗"
+      },
       "connectionLifecycle": {
         "tasks": {
           "connectingTitle": "正在連線 {agent}",
@@ -1201,7 +1221,30 @@
         "promptLabel": "提示詞",
         "subjectLabel": "主題",
         "taskLabel": "任務",
-        "nameLabel": "名稱："
+        "nameLabel": "名稱：",
+        "title": {
+          "edit": "編輯",
+          "command": "命令",
+          "todoWrite": "待辦",
+          "read": "讀取",
+          "write": "寫入",
+          "notebookEdit": "Notebook 編輯",
+          "editFiles": "編輯（{count} 個檔案）",
+          "editWithTarget": "編輯 {target}",
+          "readWithTarget": "讀取 {target}",
+          "writeWithTarget": "寫入 {target}",
+          "notebookEditWithTarget": "Notebook 編輯 {target}",
+          "globWithPattern": "Glob {pattern}",
+          "grepWithPattern": "Grep {pattern}",
+          "taskCreateWithSubject": "建立任務：{subject}",
+          "taskUpdateWithStatus": "更新任務 #{id} -> {status}",
+          "taskUpdate": "更新任務 #{id}",
+          "webFetchWithUrl": "擷取網頁 {url}",
+          "webSearchWithQuery": "網頁搜尋：{query}",
+          "todosProgress": "待辦（{done}/{total}）",
+          "skillWithName": "Skill：{name}",
+          "genericWithContext": "{tool}：{context}"
+        }
       }
     },
     "diffPreview": {

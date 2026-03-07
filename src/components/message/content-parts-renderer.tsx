@@ -1080,6 +1080,107 @@ function sanitizeLiveTitle(title: string | null | undefined): string | null {
   return trimmed
 }
 
+function localizeDerivedToolTitle(
+  title: string | null,
+  t: (key: string, values?: Record<string, unknown>) => string
+): string | null {
+  if (!title) return null
+
+  if (title === "Edit") return t("title.edit")
+  if (title === "Command") return t("title.command")
+  if (title === "TodoWrite") return t("title.todoWrite")
+  if (title === "Read") return t("title.read")
+  if (title === "Write") return t("title.write")
+  if (title === "NotebookEdit") return t("title.notebookEdit")
+
+  const editFilesMatch = title.match(/^Edit \((\d+) files\)$/)
+  if (editFilesMatch) {
+    return t("title.editFiles", { count: Number(editFilesMatch[1]) })
+  }
+
+  const editWithTarget = title.match(/^Edit (.+)$/)
+  if (editWithTarget) {
+    return t("title.editWithTarget", { target: editWithTarget[1] })
+  }
+
+  const readWithTarget = title.match(/^Read (.+)$/)
+  if (readWithTarget) {
+    return t("title.readWithTarget", { target: readWithTarget[1] })
+  }
+
+  const writeWithTarget = title.match(/^Write (.+)$/)
+  if (writeWithTarget) {
+    return t("title.writeWithTarget", { target: writeWithTarget[1] })
+  }
+
+  const notebookEditWithTarget = title.match(/^NotebookEdit (.+)$/)
+  if (notebookEditWithTarget) {
+    return t("title.notebookEditWithTarget", {
+      target: notebookEditWithTarget[1],
+    })
+  }
+
+  const globWithPattern = title.match(/^Glob (.+)$/)
+  if (globWithPattern) {
+    return t("title.globWithPattern", { pattern: globWithPattern[1] })
+  }
+
+  const grepWithPattern = title.match(/^Grep (.+)$/)
+  if (grepWithPattern) {
+    return t("title.grepWithPattern", { pattern: grepWithPattern[1] })
+  }
+
+  const taskCreateWithSubject = title.match(/^TaskCreate: (.+)$/)
+  if (taskCreateWithSubject) {
+    return t("title.taskCreateWithSubject", {
+      subject: taskCreateWithSubject[1],
+    })
+  }
+
+  const taskUpdateWithStatus = title.match(/^TaskUpdate #([^ ]+)(?: → (.+))?$/)
+  if (taskUpdateWithStatus) {
+    const id = taskUpdateWithStatus[1]
+    const status = taskUpdateWithStatus[2]
+    if (status) {
+      return t("title.taskUpdateWithStatus", { id, status })
+    }
+    return t("title.taskUpdate", { id })
+  }
+
+  const webFetchWithUrl = title.match(/^WebFetch (.+)$/)
+  if (webFetchWithUrl) {
+    return t("title.webFetchWithUrl", { url: webFetchWithUrl[1] })
+  }
+
+  const webSearchWithQuery = title.match(/^WebSearch: (.+)$/)
+  if (webSearchWithQuery) {
+    return t("title.webSearchWithQuery", { query: webSearchWithQuery[1] })
+  }
+
+  const todosProgress = title.match(/^Todos \((\d+)\/(\d+)\)$/)
+  if (todosProgress) {
+    return t("title.todosProgress", {
+      done: Number(todosProgress[1]),
+      total: Number(todosProgress[2]),
+    })
+  }
+
+  const skillWithName = title.match(/^Skill: (.+)$/)
+  if (skillWithName) {
+    return t("title.skillWithName", { name: skillWithName[1] })
+  }
+
+  const genericWithContext = title.match(/^([^:]+): (.+)$/)
+  if (genericWithContext) {
+    return t("title.genericWithContext", {
+      tool: genericWithContext[1],
+      context: genericWithContext[2],
+    })
+  }
+
+  return title
+}
+
 // ── Specialized tool input renderers ─────────────────────────────────
 
 /** Edit tool: file path + unified diff view */
@@ -1906,23 +2007,28 @@ const ToolCallPart = memo(function ToolCallPart({
   const isCommandLikeTool = isCommandTool || toolNameLower === "apply_patch"
   const isRunning =
     part.state === "input-available" || part.state === "input-streaming"
-  const title = useMemo(
-    () =>
+  const title = useMemo(() => {
+    const rawTitle =
       deriveToolTitle(
         normalizedToolName,
         part.input,
         part.output ?? part.errorText ?? null
       ) ??
       sanitizeLiveTitle(part.displayTitle) ??
-      null,
-    [
-      normalizedToolName,
-      part.input,
-      part.output,
-      part.errorText,
-      part.displayTitle,
-    ]
-  )
+      null
+    return localizeDerivedToolTitle(rawTitle, ((key, values) =>
+      t(key as never, values as never)) as (
+      key: string,
+      values?: Record<string, unknown>
+    ) => string)
+  }, [
+    normalizedToolName,
+    part.input,
+    part.output,
+    part.errorText,
+    part.displayTitle,
+    t,
+  ])
   const lineChangeStats = useMemo(() => {
     if (toolNameLower !== "edit" && toolNameLower !== "apply_patch") {
       return null
