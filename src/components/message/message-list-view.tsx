@@ -173,16 +173,13 @@ const PendingTypingIndicator = memo(function PendingTypingIndicator() {
 
 const AutoScrollOnSend = memo(function AutoScrollOnSend({
   signal,
-  enabled,
 }: {
   signal: number
-  enabled: boolean
 }) {
   const { scrollToBottom } = useStickToBottomContext()
   const lastSignalRef = useRef(signal)
 
   useEffect(() => {
-    if (!enabled) return
     if (signal === lastSignalRef.current) return
     lastSignalRef.current = signal
 
@@ -193,7 +190,7 @@ const AutoScrollOnSend = memo(function AutoScrollOnSend({
     return () => {
       cancelAnimationFrame(rafId)
     }
-  }, [enabled, scrollToBottom, signal])
+  }, [scrollToBottom, signal])
 
   return null
 })
@@ -369,7 +366,7 @@ export function MessageListView({
         className="flex-1 min-h-0"
         resize={shouldUseSmoothResize ? "smooth" : undefined}
       >
-        <AutoScrollOnSend signal={sendSignal} enabled={isActive} />
+        <AutoScrollOnSend signal={sendSignal} />
         <VirtualizedMessageThread
           items={threadItems}
           getItemKey={(item) => item.key}
