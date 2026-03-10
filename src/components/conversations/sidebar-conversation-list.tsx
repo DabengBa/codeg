@@ -94,7 +94,8 @@ export function SidebarConversationList({
     refreshConversations,
   } = useFolderContext()
 
-  const { openTab, closeTab, openNewConversationTab } = useTabContext()
+  const { openTab, closeConversationTab, openNewConversationTab } =
+    useTabContext()
   const { addTask, updateTask } = useTaskContext()
 
   const [importing, setImporting] = useState(false)
@@ -206,10 +207,10 @@ export function SidebarConversationList({
   const handleDelete = useCallback(
     async (id: number, agentType: string) => {
       await deleteConversation(id)
-      closeTab(`conv-${agentType}-${id}`)
+      closeConversationTab(id, agentType as Parameters<typeof openTab>[1])
       refreshConversations()
     },
-    [closeTab, refreshConversations]
+    [closeConversationTab, refreshConversations]
   )
 
   const handleStatusChange = useCallback(

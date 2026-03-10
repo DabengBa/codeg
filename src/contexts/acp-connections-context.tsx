@@ -974,7 +974,6 @@ export interface AcpActionsValue {
     requestId: string,
     optionId: string
   ): Promise<void>
-  migrateContextKey(fromKey: string, toKey: string): void
   setActiveKey(key: string | null): void
   touchActivity(contextKey: string): void
 }
@@ -1754,56 +1753,6 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "REMOVE_ALL" })
   }, [dispatch])
 
-  const migrateContextKey = useCallback(
-    (fromKey: string, toKey: string) => {
-      if (!fromKey || !toKey || fromKey === toKey) return
-
-      const current = storeRef.current.connections
-      const conn = current.get(fromKey)
-      if (!conn) return
-
-      const targetConn = current.get(toKey)
-      const migratedConn = targetConn
-        ? {
-            ...conn,
-            // Preserve the most recent error from the target, if any.
-            error: targetConn.error ?? conn.error,
-            contextKey: toKey,
-          }
-        : { ...conn, contextKey: toKey }
-
-      const next = new Map(current)
-      next.delete(fromKey)
-      next.set(toKey, migratedConn)
-      storeRef.current.connections = next
-
-      for (const [connectionId, mappedKey] of reverseMapRef.current) {
-        if (mappedKey === fromKey) {
-          reverseMapRef.current.set(connectionId, toKey)
-        }
-      }
-
-      const lastActive = lastActivityRef.current.get(fromKey)
-      if (lastActive != null) {
-        lastActivityRef.current.set(toKey, lastActive)
-        lastActivityRef.current.delete(fromKey)
-      }
-
-      if (connectingKeysRef.current.delete(fromKey)) {
-        connectingKeysRef.current.add(toKey)
-      }
-
-      if (storeRef.current.activeKey === fromKey) {
-        storeRef.current.activeKey = toKey
-        notifyActiveKeyListeners()
-      }
-
-      notifyKeyListeners(fromKey)
-      notifyKeyListeners(toKey)
-    },
-    [notifyActiveKeyListeners, notifyKeyListeners]
-  )
-
   const sendPrompt = useCallback(
     async (contextKey: string, blocks: PromptInputBlock[]) => {
       const conn = storeRef.current.connections.get(contextKey)
@@ -1869,7 +1818,6 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
       setConfigOption,
       cancel,
       respondPermission,
-      migrateContextKey,
       setActiveKey,
       touchActivity,
     }),
@@ -1882,7 +1830,6 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
       setConfigOption,
       cancel,
       respondPermission,
-      migrateContextKey,
       setActiveKey,
       touchActivity,
     ]

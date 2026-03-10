@@ -22,8 +22,8 @@ import type {
 
 interface TabItemInternal {
   id: string
-  kind: "conversation" | "new_conversation"
-  conversationId?: number
+  kind: "conversation"
+  conversationId: number | null
   agentType: AgentType
   title: string
   isPinned: boolean
@@ -43,18 +43,13 @@ interface TabContextValue {
     title?: string
   ) => void
   closeTab: (tabId: string) => void
+  closeConversationTab: (conversationId: number, agentType: AgentType) => void
   closeOtherTabs: (tabId: string) => void
   closeAllTabs: () => void
   switchTab: (tabId: string) => void
   pinTab: (tabId: string) => void
   openNewConversationTab: (agentType: AgentType, workingDir: string) => void
-  promoteNewConversationTab: (
-    tabId: string,
-    conversationId: number,
-    agentType: AgentType,
-    title: string
-  ) => void
-  linkTabConversation: (
+  bindConversationTab: (
     tabId: string,
     conversationId: number,
     agentType: AgentType,
@@ -83,13 +78,6 @@ function makeConversationTabId(
 function makeNewConversationTabId(): string {
   return `new-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
-
-/**
- * Find a tab that represents the given conversation, regardless of whether
- * it has been promoted to a canonical id yet.  Checks canonical id first,
- * then falls back to matching by conversationId + agentType (covers the
- * linked-but-not-yet-promoted new_conversation tabs).
- */
 function findTabIndexForConversation(
   tabs: TabItemInternal[],
   agentType: AgentType,
@@ -130,7 +118,7 @@ export function TabProvider({ children }: TabProviderProps) {
       return [
         {
           id: tabId,
-          kind: "conversation" as const,
+          kind: "conversation",
           conversationId: selectedConversation.id,
           agentType: selectedConversation.agentType,
           title: t("loadingConversation"),
@@ -187,7 +175,7 @@ export function TabProvider({ children }: TabProviderProps) {
 
       const restoredTabs: TabItemInternal[] = opened.map((oc) => ({
         id: makeConversationTabId(oc.agent_type, oc.conversation_id),
-        kind: "conversation" as const,
+        kind: "conversation",
         conversationId: oc.conversation_id,
         agentType: oc.agent_type,
         title: t("loadingConversation"),
@@ -300,13 +288,20 @@ export function TabProvider({ children }: TabProviderProps) {
         cancelNewConversation()
         return
       }
-      if (tab.kind === "conversation" && tab.conversationId != null) {
+      if (tab.conversationId != null) {
         selectConversation(tab.conversationId, tab.agentType)
-      } else if (tab.kind === "new_conversation" && tab.workingDir) {
-        startNewConversation(tab.agentType, tab.workingDir)
+      } else {
+        const workingDir = tab.workingDir ?? folder?.path
+        if (!workingDir) {
+          clearSelection()
+          cancelNewConversation()
+          return
+        }
+        startNewConversation(tab.agentType, workingDir)
       }
     },
     [
+      folder?.path,
       selectConversation,
       clearSelection,
       startNewConversation,
@@ -386,10 +381,11 @@ export function TabProvider({ children }: TabProviderProps) {
     [activateConversationPane, selectConversation, t]
   )
 
-  const makeReplacementNewConversationTab = useCallback(
+  const makeReplacementDraftTab = useCallback(
     (preferred?: TabItemInternal): TabItemInternal => ({
       id: makeNewConversationTabId(),
-      kind: "new_conversation",
+      kind: "conversation",
+      conversationId: null,
       agentType: preferred?.agentType ?? "codex",
       title: t("newConversation"),
       isPinned: true,
@@ -410,7 +406,7 @@ export function TabProvider({ children }: TabProviderProps) {
         const next = prev.filter((t) => t.id !== tabId)
 
         if (next.length === 0) {
-          const replacementTab = makeReplacementNewConversationTab(closingTab)
+          const replacementTab = makeReplacementDraftTab(closingTab)
           neighborToSync = replacementTab
           return [replacementTab]
         }
@@ -433,11 +429,19 @@ export function TabProvider({ children }: TabProviderProps) {
         activateConversationPane()
       }
     },
-    [
-      activateConversationPane,
-      makeReplacementNewConversationTab,
-      syncFolderContext,
-    ]
+    [activateConversationPane, makeReplacementDraftTab, syncFolderContext]
+  )
+
+  const closeConversationTab = useCallback(
+    (conversationId: number, agentType: AgentType) => {
+      const target = rawTabsRef.current.find(
+        (tab) =>
+          tab.conversationId === conversationId && tab.agentType === agentType
+      )
+      if (!target) return
+      closeTab(target.id)
+    },
+    [closeTab]
   )
 
   const closeOtherTabs = useCallback(
@@ -459,21 +463,17 @@ export function TabProvider({ children }: TabProviderProps) {
   const closeAllTabs = useCallback(() => {
     const seedTab =
       rawTabsRef.current.find(
-        (t) => t.kind === "new_conversation" && t.workingDir
+        (t) => t.conversationId == null && t.workingDir
       ) ??
       rawTabsRef.current.find((t) => t.id === activeTabIdRef.current) ??
       rawTabsRef.current[0]
 
-    const replacementTab = makeReplacementNewConversationTab(seedTab)
+    const replacementTab = makeReplacementDraftTab(seedTab)
     setTabs([replacementTab])
     setActiveTabId(replacementTab.id)
     syncFolderContext(replacementTab)
     activateConversationPane()
-  }, [
-    activateConversationPane,
-    makeReplacementNewConversationTab,
-    syncFolderContext,
-  ])
+  }, [activateConversationPane, makeReplacementDraftTab, syncFolderContext])
 
   const switchTab = useCallback(
     (tabId: string) => {
@@ -501,10 +501,7 @@ export function TabProvider({ children }: TabProviderProps) {
   const openNewConversationTab = useCallback(
     (agentType: AgentType, workingDir: string) => {
       const existingTab = rawTabsRef.current.find(
-        (t) =>
-          t.kind === "new_conversation" &&
-          t.agentType === agentType &&
-          !t.conversationId
+        (t) => t.conversationId == null && t.agentType === agentType
       )
 
       if (existingTab) {
@@ -517,7 +514,8 @@ export function TabProvider({ children }: TabProviderProps) {
       const tabId = makeNewConversationTabId()
       const newTab: TabItemInternal = {
         id: tabId,
-        kind: "new_conversation",
+        kind: "conversation",
+        conversationId: null,
         agentType,
         title: t("newConversation"),
         isPinned: true,
@@ -532,71 +530,45 @@ export function TabProvider({ children }: TabProviderProps) {
     [activateConversationPane, startNewConversation, syncFolderContext, t]
   )
 
-  const linkTabConversation = useCallback(
+  const bindConversationTab = useCallback(
     (
       tabId: string,
       conversationId: number,
       agentType: AgentType,
       title: string
     ) => {
+      let nextActiveTabId: string | null = null
       setTabs((prev) =>
-        prev.map((t) =>
-          t.id === tabId ? { ...t, conversationId, agentType, title } : t
-        )
+        prev.flatMap((tab) => {
+          if (tab.id === tabId) {
+            const nextTab = { ...tab, conversationId, agentType, title }
+            return [nextTab]
+          }
+
+          if (
+            tab.conversationId === conversationId &&
+            tab.agentType === agentType
+          ) {
+            if (activeTabIdRef.current === tabId) {
+              nextActiveTabId = tab.id
+            }
+            return []
+          }
+
+          return [tab]
+        })
       )
-    },
-    []
-  )
-
-  const promoteNewConversationTab = useCallback(
-    (
-      tabId: string,
-      conversationId: number,
-      agentType: AgentType,
-      title: string
-    ) => {
-      let activateId: string | undefined
-
-      setTabs((prev) => {
-        const index = prev.findIndex((t) => t.id === tabId)
-        if (index < 0) return prev
-
-        const newId = makeConversationTabId(agentType, conversationId)
-
-        // Check if a *different* tab already represents this conversation
-        const dupeIndex = findTabIndexForConversation(
-          prev,
-          agentType,
-          conversationId
+      if (nextActiveTabId) {
+        setActiveTabId(nextActiveTabId)
+        const target = rawTabsRef.current.find(
+          (tab) => tab.id === nextActiveTabId
         )
-        if (dupeIndex >= 0 && dupeIndex !== index) {
-          activateId = prev[dupeIndex].id
-          return prev.filter((t) => t.id !== tabId)
+        if (target) {
+          syncFolderContext(target)
         }
-
-        const promoted: TabItemInternal = {
-          ...prev[index],
-          id: newId,
-          kind: "conversation",
-          conversationId,
-          agentType,
-          title,
-          isPinned: true,
-        }
-        activateId = newId
-
-        const updated = [...prev]
-        updated[index] = promoted
-        return updated
-      })
-
-      if (activateId) {
-        setActiveTabId(activateId)
-        selectConversation(conversationId, agentType)
-        activateConversationPane()
       }
     },
-    [activateConversationPane, selectConversation]
+    [syncFolderContext]
   )
 
   const value = useMemo(
@@ -605,13 +577,13 @@ export function TabProvider({ children }: TabProviderProps) {
       activeTabId,
       openTab,
       closeTab,
+      closeConversationTab,
       closeOtherTabs,
       closeAllTabs,
       switchTab,
       pinTab,
       openNewConversationTab,
-      promoteNewConversationTab,
-      linkTabConversation,
+      bindConversationTab,
       reorderTabs,
     }),
     [
@@ -619,13 +591,13 @@ export function TabProvider({ children }: TabProviderProps) {
       activeTabId,
       openTab,
       closeTab,
+      closeConversationTab,
       closeOtherTabs,
       closeAllTabs,
       switchTab,
       pinTab,
       openNewConversationTab,
-      promoteNewConversationTab,
-      linkTabConversation,
+      bindConversationTab,
       reorderTabs,
     ]
   )

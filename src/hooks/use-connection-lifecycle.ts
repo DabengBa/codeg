@@ -6,11 +6,6 @@ import { useAcpActions } from "@/contexts/acp-connections-context"
 import { useTaskContext } from "@/contexts/task-context"
 import { useConnection, type UseConnectionReturn } from "@/hooks/use-connection"
 import { AGENT_LABELS, type AgentType, type PromptDraft } from "@/lib/types"
-import { getPromptDraftDisplayText } from "@/lib/prompt-draft"
-import {
-  clearPendingPromptText,
-  setPendingPromptText,
-} from "@/lib/pending-prompt-text"
 
 interface UseConnectionLifecycleOptions {
   contextKey: string
@@ -50,7 +45,6 @@ export function useConnectionLifecycle({
   sessionId,
 }: UseConnectionLifecycleOptions): UseConnectionLifecycleReturn {
   const t = useTranslations("Folder.chat.connectionLifecycle")
-  const sharedT = useTranslations("Folder.chat.shared")
   const { setActiveKey, touchActivity } = useAcpActions()
   const { addTask, updateTask, removeTask } = useTaskContext()
   const conn = useConnection(contextKey)
@@ -201,11 +195,6 @@ export function useConnectionLifecycle({
     }
   }, [status, addTask, updateTask, removeTask, agentType, t])
 
-  useEffect(() => {
-    if (status === "prompting") return
-    clearPendingPromptText(contextKey)
-  }, [status, contextKey])
-
   const clearSelectorTask = useCallback(() => {
     if (selectorTaskTimeoutRef.current) {
       clearTimeout(selectorTaskTimeoutRef.current)
@@ -313,10 +302,6 @@ export function useConnectionLifecycle({
   const handleSend = useCallback(
     (draft: PromptDraft, modeId?: string | null) => {
       touchActivity(contextKey)
-      setPendingPromptText(
-        contextKey,
-        getPromptDraftDisplayText(draft, sharedT("attachedResources"))
-      )
       void (async () => {
         const currentModeId = modeIdRef.current
         if (modeId && modeId !== currentModeId) {
@@ -330,7 +315,7 @@ export function useConnectionLifecycle({
         console.error("[ConnLifecycle] sendPrompt:", e)
       )
     },
-    [connSetMode, sendPrompt, contextKey, touchActivity, sharedT]
+    [connSetMode, sendPrompt, contextKey, touchActivity]
   )
 
   const handleCancel = useCallback(() => {

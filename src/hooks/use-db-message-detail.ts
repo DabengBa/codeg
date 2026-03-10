@@ -91,8 +91,22 @@ interface State {
   fetchSeq: number
 }
 
+function isVirtualConversationId(conversationId: number): boolean {
+  return !Number.isFinite(conversationId) || conversationId <= 0
+}
+
 export function useDbMessageDetail(conversationId: number) {
+  const isVirtualId = isVirtualConversationId(conversationId)
   const getCachedState = useCallback((id: number): State => {
+    if (isVirtualConversationId(id)) {
+      return {
+        key: id,
+        detail: null,
+        loading: false,
+        error: null,
+        fetchSeq: 0,
+      }
+    }
     const cached = detailCache.get(id)
     return {
       key: id,
@@ -110,19 +124,24 @@ export function useDbMessageDetail(conversationId: number) {
   const derivedState =
     state.key === conversationId ? state : getCachedState(conversationId)
 
-  useEffect(
-    () =>
-      subscribeDetail(conversationId, (detail) => {
-        setState((prev) =>
-          prev.key === conversationId
-            ? { ...prev, detail, loading: false, error: null }
-            : prev
-        )
-      }),
-    [conversationId]
-  )
+  useEffect(() => {
+    if (isVirtualId) return
+    return subscribeDetail(conversationId, (detail) => {
+      setState((prev) => ({
+        key: conversationId,
+        detail,
+        loading: false,
+        error: null,
+        fetchSeq: prev.key === conversationId ? prev.fetchSeq : 0,
+      }))
+    })
+  }, [conversationId, isVirtualId])
 
   const refetch = useCallback(() => {
+    if (isVirtualConversationId(conversationId)) {
+      setState(getCachedState(conversationId))
+      return
+    }
     detailCache.delete(conversationId)
     setState((prev) => {
       const base =
@@ -138,6 +157,7 @@ export function useDbMessageDetail(conversationId: number) {
   }, [conversationId, getCachedState])
 
   useEffect(() => {
+    if (isVirtualId) return
     // Skip fetch if cache already has data
     if (detailCache.has(conversationId)) return
 
@@ -180,7 +200,7 @@ export function useDbMessageDetail(conversationId: number) {
     return () => {
       cancelled = true
     }
-  }, [conversationId, derivedState.fetchSeq])
+  }, [conversationId, derivedState.fetchSeq, isVirtualId])
 
   return useMemo(
     () => ({

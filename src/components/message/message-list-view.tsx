@@ -1,11 +1,11 @@
 "use client"
 
-import { memo, useCallback, useEffect, useMemo, useRef } from "react"
+import { memo, useCallback, useEffect, useMemo } from "react"
 import { useDbMessageDetail } from "@/hooks/use-db-message-detail"
+import { useConversationRuntime } from "@/contexts/conversation-runtime-context"
 import { ContentPartsRenderer } from "./content-parts-renderer"
 import {
   adaptMessageTurns,
-  type AdaptedMessage,
   type AdaptedContentPart,
   type MessageGroup,
   type UserImageDisplay,
@@ -18,9 +18,7 @@ import { LiveTurnStats } from "./live-turn-stats"
 import { UserResourceLinks } from "./user-resource-links"
 import { UserImageAttachments } from "./user-image-attachments"
 import { useSessionStats } from "@/contexts/session-stats-context"
-import { LiveMessageBlock } from "@/components/chat/live-message-block"
 import { AgentPlanOverlay } from "@/components/chat/agent-plan-overlay"
-import type { LiveMessage } from "@/contexts/acp-connections-context"
 import { MessageThread } from "@/components/ai-elements/message-thread"
 import { Message, MessageContent } from "@/components/ai-elements/message"
 import { Loader2 } from "lucide-react"
@@ -35,9 +33,6 @@ import { VirtualizedMessageThread } from "@/components/message/virtualized-messa
 interface MessageListViewProps {
   conversationId: number
   connStatus?: ConnectionStatus | null
-  liveMessage?: LiveMessage | null
-  pendingMessages?: AdaptedMessage[]
-  onPendingClear?: () => void
   isActive?: boolean
 }
 
@@ -50,23 +45,13 @@ interface ResolvedMessageGroup extends MessageGroup {
 type ThreadRenderItem =
   | {
       key: string
-      kind: "historical"
+      kind: "turn"
       group: ResolvedMessageGroup
-    }
-  | {
-      key: string
-      kind: "pending"
-      group: ResolvedMessageGroup
+      phase: "persisted" | "optimistic" | "streaming"
     }
   | {
       key: string
       kind: "typing"
-    }
-  | {
-      key: string
-      kind: "live"
-      message: LiveMessage
-      isStreaming: boolean
     }
 
 function fallbackExtractUserResources(
@@ -140,11 +125,13 @@ function resolveMessageGroup(
 
 const HistoricalMessageGroup = memo(function HistoricalMessageGroup({
   group,
+  dimmed = false,
 }: {
   group: ResolvedMessageGroup
+  dimmed?: boolean
 }) {
   return (
-    <div>
+    <div className={dimmed ? "opacity-70" : undefined}>
       <Message from={group.role}>
         {group.role === "user" && group.images.length > 0 ? (
           <UserImageAttachments images={group.images} className="self-end" />
@@ -168,28 +155,6 @@ const HistoricalMessageGroup = memo(function HistoricalMessageGroup({
   )
 })
 
-const PendingMessageGroup = memo(function PendingMessageGroup({
-  group,
-}: {
-  group: ResolvedMessageGroup
-}) {
-  return (
-    <div className="opacity-70">
-      <Message from={group.role}>
-        {group.role === "user" && group.images.length > 0 ? (
-          <UserImageAttachments images={group.images} className="self-end" />
-        ) : null}
-        <MessageContent>
-          <ContentPartsRenderer parts={group.parts} role={group.role} />
-        </MessageContent>
-        {group.role === "user" && group.resources.length > 0 ? (
-          <UserResourceLinks resources={group.resources} className="self-end" />
-        ) : null}
-      </Message>
-    </div>
-  )
-})
-
 const PendingTypingIndicator = memo(function PendingTypingIndicator() {
   return (
     <Message from="assistant">
@@ -207,33 +172,15 @@ const PendingTypingIndicator = memo(function PendingTypingIndicator() {
 export function MessageListView({
   conversationId,
   connStatus,
-  liveMessage,
-  pendingMessages,
-  onPendingClear,
   isActive = true,
 }: MessageListViewProps) {
   const t = useTranslations("Folder.chat.messageList")
   const sharedT = useTranslations("Folder.chat.shared")
   const { detail, loading, error } = useDbMessageDetail(conversationId)
-  const turnCount = detail?.turns.length ?? 0
-
-  // 移除了 prompting 结束后的立即刷新
-  // 原因：后端自动持久化可能有延迟，立即刷新会读到不完整数据
-  // 现在通过清空 pending 来避免累积问题，等用户切换会话或手动刷新时再加载
-
-  const prevTurnCountRef = useRef(turnCount)
-  const prevConvIdRef = useRef(conversationId)
-  useEffect(() => {
-    if (prevConvIdRef.current !== conversationId) {
-      prevConvIdRef.current = conversationId
-      prevTurnCountRef.current = turnCount
-      return
-    }
-    if (turnCount > prevTurnCountRef.current && onPendingClear) {
-      onPendingClear()
-    }
-    prevTurnCountRef.current = turnCount
-  }, [turnCount, onPendingClear, conversationId])
+  const { getSession, getTimelineTurns } = useConversationRuntime()
+  const session = getSession(conversationId)
+  const liveMessage = session?.liveMessage ?? null
+  const timelineTurns = getTimelineTurns(conversationId)
 
   const { setSessionStats } = useSessionStats()
   const sessionStats = detail?.session_stats ?? null
@@ -244,106 +191,105 @@ export function MessageListView({
     }
   }, [isActive, sessionStats, setSessionStats])
 
-  const shouldUseSmoothResize = !(isActive && !loading && detail)
+  const shouldUseSmoothResize = !(isActive && !loading && timelineTurns.length)
+  const attachedResourcesText = sharedT("attachedResources")
 
-  const messages = useMemo(
+  const groupedTimeline = useMemo(
     () =>
-      detail
-        ? adaptMessageTurns(detail.turns, {
-            attachedResources: sharedT("attachedResources"),
-            toolCallFailed: sharedT("toolCallFailed"),
-          })
-        : [],
-    [detail, sharedT]
+      timelineTurns.reduce<
+        Array<{
+          phase: "persisted" | "optimistic" | "streaming"
+          turns: typeof timelineTurns
+        }>
+      >((acc, item) => {
+        const current = acc[acc.length - 1]
+        if (current && current.phase === item.phase) {
+          current.turns.push(item)
+          return acc
+        }
+        acc.push({
+          phase: item.phase,
+          turns: [item],
+        })
+        return acc
+      }, []),
+    [timelineTurns]
   )
 
-  const groups = useMemo(() => groupAdaptedMessages(messages), [messages])
+  const threadItems = useMemo<ThreadRenderItem[]>(() => {
+    const items: ThreadRenderItem[] = []
+    for (
+      let chunkIndex = 0;
+      chunkIndex < groupedTimeline.length;
+      chunkIndex++
+    ) {
+      const chunk = groupedTimeline[chunkIndex]
+      const adapted = adaptMessageTurns(
+        chunk.turns.map((item) => item.turn),
+        {
+          attachedResources: sharedT("attachedResources"),
+          toolCallFailed: sharedT("toolCallFailed"),
+        }
+      )
+      const groups = groupAdaptedMessages(adapted).map((group) =>
+        resolveMessageGroup(group, attachedResourcesText)
+      )
+      for (let groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+        const group = groups[groupIndex]
+        items.push({
+          key: `${chunk.phase}-${chunkIndex}-${group.id}-${groupIndex}`,
+          kind: "turn",
+          group,
+          phase: chunk.phase,
+        })
+      }
+    }
+    const lastPhase = timelineTurns[timelineTurns.length - 1]?.phase ?? null
+    if (connStatus === "prompting" && lastPhase === "optimistic") {
+      items.push({ key: "pending-typing", kind: "typing" })
+    }
+    return items
+  }, [
+    attachedResourcesText,
+    connStatus,
+    groupedTimeline,
+    sharedT,
+    timelineTurns,
+  ])
+
+  const historicalMessages = useMemo(
+    () =>
+      adaptMessageTurns(
+        timelineTurns
+          .filter((item) => item.phase !== "streaming")
+          .map((item) => item.turn),
+        {
+          attachedResources: sharedT("attachedResources"),
+          toolCallFailed: sharedT("toolCallFailed"),
+        }
+      ),
+    [sharedT, timelineTurns]
+  )
   const historicalPlanEntries = useMemo(
-    () => extractLatestPlanEntriesFromMessages(messages),
-    [messages]
+    () => extractLatestPlanEntriesFromMessages(historicalMessages),
+    [historicalMessages]
   )
   const historicalPlanKey = useMemo(
     () => buildPlanKey(historicalPlanEntries),
     [historicalPlanEntries]
   )
 
-  const pendingGroups = useMemo(
-    () =>
-      pendingMessages?.length ? groupAdaptedMessages(pendingMessages) : [],
-    [pendingMessages]
-  )
-  const attachedResourcesText = sharedT("attachedResources")
-
-  const resolvedGroups = useMemo(
-    () =>
-      groups.map((group) => resolveMessageGroup(group, attachedResourcesText)),
-    [groups, attachedResourcesText]
-  )
-  const resolvedPendingGroups = useMemo(
-    () =>
-      pendingGroups.map((group) =>
-        resolveMessageGroup(group, attachedResourcesText)
-      ),
-    [pendingGroups, attachedResourcesText]
-  )
-
-  const showLiveMessage = Boolean(
-    liveMessage &&
-    (connStatus === "prompting" ||
-      (liveMessage.content.length > 0 && resolvedPendingGroups.length > 0))
-  )
-
-  const threadItems = useMemo<ThreadRenderItem[]>(() => {
-    const items: ThreadRenderItem[] = [
-      ...resolvedGroups.map((group) => ({
-        key: `history-${group.id}`,
-        kind: "historical" as const,
-        group,
-      })),
-      ...resolvedPendingGroups.map((group) => ({
-        key: `pending-${group.id}`,
-        kind: "pending" as const,
-        group,
-      })),
-    ]
-
-    if (resolvedPendingGroups.length > 0 && !showLiveMessage) {
-      items.push({ key: "pending-typing", kind: "typing" })
-    }
-
-    if (showLiveMessage && liveMessage) {
-      items.push({
-        key: `live-${liveMessage.id}`,
-        kind: "live",
-        message: liveMessage,
-        isStreaming: connStatus === "prompting",
-      })
-    }
-
-    return items
-  }, [
-    resolvedGroups,
-    resolvedPendingGroups,
-    showLiveMessage,
-    liveMessage,
-    connStatus,
-  ])
-
   const renderThreadItem = useCallback((item: ThreadRenderItem) => {
     switch (item.kind) {
-      case "historical":
-        return <HistoricalMessageGroup group={item.group} />
-      case "pending":
-        return <PendingMessageGroup group={item.group} />
-      case "typing":
-        return <PendingTypingIndicator />
-      case "live":
+      case "turn":
         return (
-          <LiveMessageBlock
-            message={item.message}
-            isStreaming={item.isStreaming}
+          <HistoricalMessageGroup
+            group={item.group}
+            dimmed={item.phase === "optimistic"}
           />
         )
+      case "typing":
+        return <PendingTypingIndicator />
       default:
         return null
     }
@@ -362,7 +308,9 @@ export function MessageListView({
 
   const agentPlanOverlayKey = liveMessage?.id ?? `history-${conversationId}`
 
-  if (loading && !detail) {
+  const hasRenderableContent = threadItems.length > 0 || Boolean(liveMessage)
+
+  if (loading && !hasRenderableContent) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -373,7 +321,7 @@ export function MessageListView({
     )
   }
 
-  if (error) {
+  if (error && !hasRenderableContent) {
     return (
       <div className="p-6">
         <div className="text-center py-12">
@@ -384,8 +332,6 @@ export function MessageListView({
       </div>
     )
   }
-
-  if (!detail) return null
 
   return (
     <div className="relative flex h-full min-h-0 flex-col">
@@ -402,7 +348,7 @@ export function MessageListView({
           overscan={10}
         />
       </MessageThread>
-      {showLiveMessage && liveMessage && connStatus === "prompting" && (
+      {liveMessage && connStatus === "prompting" && (
         <LiveTurnStats
           message={liveMessage}
           isStreaming={connStatus === "prompting"}
@@ -413,7 +359,7 @@ export function MessageListView({
         message={liveMessage ?? null}
         entries={historicalPlanEntries}
         planKey={historicalPlanKey}
-        defaultExpanded={showLiveMessage}
+        defaultExpanded={connStatus === "prompting"}
       />
     </div>
   )

@@ -1,21 +1,14 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { ChevronRight, FileIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useFolderContext } from "@/contexts/folder-context"
 import { useTabContext } from "@/contexts/tab-context"
-import type { LiveMessage } from "@/contexts/acp-connections-context"
+import { useConversationRuntime } from "@/contexts/conversation-runtime-context"
 import { useWorkspaceContext } from "@/contexts/workspace-context"
-import { useConnection } from "@/hooks/use-connection"
 import { useDbMessageDetail } from "@/hooks/use-db-message-detail"
 import { extractSessionFilesGrouped } from "@/lib/session-files"
-import { getPendingPromptText } from "@/lib/pending-prompt-text"
-import {
-  inferLiveToolName,
-  normalizeToolName,
-} from "@/lib/tool-call-normalization"
-import type { ConnectionStatus, MessageTurn } from "@/lib/types"
 import {
   CommitFileAdditions,
   CommitFileDeletions,
@@ -26,8 +19,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
-
-const LIVE_FILE_WRITE_OPS = new Set(["edit", "write", "apply_patch"])
 
 function isRemovedFileDiff(diff: string | null): boolean {
   if (!diff) return false
@@ -61,123 +52,17 @@ function toFolderRelativePath(filePath: string, folderPath?: string): string {
   return normalizedFilePath
 }
 
-function extractTurnText(turn: MessageTurn | null): string | null {
-  if (!turn || turn.role !== "user") return null
-
-  for (const block of turn.blocks) {
-    if (block.type !== "text") continue
-    const text = block.text.trim()
-    if (text) return text
-  }
-
-  return null
-}
-
-function mergeLiveTurns(params: {
-  turns: MessageTurn[]
-  liveMessage: LiveMessage | null
-  connStatus: ConnectionStatus | null
-  pendingPromptText: string | null
-  fallbackPromptText: string
-}): MessageTurn[] {
-  const {
-    turns,
-    liveMessage,
-    connStatus,
-    pendingPromptText,
-    fallbackPromptText,
-  } = params
-  if (!liveMessage || connStatus !== "prompting") return turns
-
-  const liveBlocks = liveMessage.content.flatMap((block) => {
-    if (block.type !== "tool_call") return []
-
-    const toolName = inferLiveToolName({
-      title: block.info.title,
-      kind: block.info.kind,
-      rawInput: block.info.raw_input,
-    })
-    const normalizedToolName = normalizeToolName(toolName)
-    if (!LIVE_FILE_WRITE_OPS.has(normalizedToolName)) return []
-
-    return [
-      {
-        type: "tool_use" as const,
-        tool_use_id: block.info.tool_call_id,
-        tool_name: toolName,
-        input_preview: block.info.raw_input,
-      },
-    ]
-  })
-
-  if (liveBlocks.length === 0) return turns
-
-  const now = new Date().toISOString()
-  const mergedTurns = [...turns]
-  const lastTurn = mergedTurns[mergedTurns.length - 1]
-  const lastUserTurn =
-    [...mergedTurns].reverse().find((turn) => turn.role === "user") ?? null
-  const pendingText = pendingPromptText?.trim() ?? ""
-  const shouldReuseExistingUserTurn =
-    pendingText.length > 0 && extractTurnText(lastUserTurn) === pendingText
-
-  if ((!lastTurn || lastTurn.role !== "user") && !shouldReuseExistingUserTurn) {
-    mergedTurns.push({
-      id: `live-user-${liveMessage.id}`,
-      role: "user",
-      blocks: [
-        { type: "text", text: pendingPromptText?.trim() || fallbackPromptText },
-      ],
-      timestamp: now,
-    })
-  }
-
-  mergedTurns.push({
-    id: `live-assistant-${liveMessage.id}`,
-    role: "assistant",
-    blocks: liveBlocks,
-    timestamp: now,
-  })
-
-  return mergedTurns
-}
-
-function SessionFilesContent({
-  conversationId,
-  liveMessage,
-  connStatus,
-  pendingPromptText,
-}: {
-  conversationId: number
-  liveMessage: LiveMessage | null
-  connStatus: ConnectionStatus | null
-  pendingPromptText: string | null
-}) {
+function SessionFilesContent({ conversationId }: { conversationId: number }) {
   const t = useTranslations("Folder.sessionFiles")
-  const { detail, loading, refetch } = useDbMessageDetail(conversationId)
+  const { loading } = useDbMessageDetail(conversationId)
+  const { getTimelineTurns } = useConversationRuntime()
   const { openSessionFileDiff } = useWorkspaceContext()
   const { folder } = useFolderContext()
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
-  const prevStatusRef = useRef(connStatus)
-
-  useEffect(() => {
-    const prev = prevStatusRef.current
-    prevStatusRef.current = connStatus
-    if (prev === "prompting" && connStatus && connStatus !== "prompting") {
-      refetch()
-    }
-  }, [connStatus, refetch])
 
   const turns = useMemo(
-    () =>
-      mergeLiveTurns({
-        turns: detail?.turns ?? [],
-        liveMessage,
-        connStatus,
-        pendingPromptText,
-        fallbackPromptText: t("currentResponse"),
-      }),
-    [detail?.turns, liveMessage, connStatus, pendingPromptText, t]
+    () => getTimelineTurns(conversationId).map((item) => item.turn),
+    [conversationId, getTimelineTurns]
   )
   const groups = useMemo(
     () => (turns.length > 0 ? extractSessionFilesGrouped(turns) : []),
@@ -197,7 +82,7 @@ function SessionFilesContent({
     )
   }
 
-  if (loading) {
+  if (loading && groups.length === 0) {
     return (
       <div className="flex items-center justify-center h-full p-4">
         <p className="text-xs text-muted-foreground text-center">
@@ -381,9 +266,6 @@ export function SessionFilesTab() {
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const conversationId = activeTab?.conversationId
-  const contextKey = activeTab?.id ?? "__session-files-tab__"
-  const conn = useConnection(contextKey)
-  const pendingPromptText = getPendingPromptText(contextKey)
 
   if (!activeTab) {
     return (
@@ -408,12 +290,7 @@ export function SessionFilesTab() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <SessionFilesContent
-          conversationId={conversationId}
-          liveMessage={conn.liveMessage}
-          connStatus={conn.status}
-          pendingPromptText={pendingPromptText}
-        />
+        <SessionFilesContent conversationId={conversationId} />
       </div>
     </div>
   )

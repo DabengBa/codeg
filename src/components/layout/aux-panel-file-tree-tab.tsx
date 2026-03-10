@@ -842,10 +842,7 @@ export function FileTreeTab() {
   const activeSessionTabId = useMemo(() => {
     const activeTab = tabs.find((tab) => tab.id === activeTabId)
     if (!activeTab) return null
-    if (
-      activeTab.kind !== "conversation" &&
-      activeTab.kind !== "new_conversation"
-    ) {
+    if (activeTab.kind !== "conversation") {
       return null
     }
     return activeTab.id
