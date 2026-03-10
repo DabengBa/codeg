@@ -9,10 +9,12 @@ import { Message, MessageContent } from "@/components/ai-elements/message"
 
 interface LiveMessageBlockProps {
   message: LiveMessage
+  isStreaming?: boolean
 }
 
 export const LiveMessageBlock = memo(function LiveMessageBlock({
   message,
+  isStreaming = true,
 }: LiveMessageBlockProps) {
   const t = useTranslations("Folder.chat.liveMessageBlock")
   const sharedT = useTranslations("Folder.chat.shared")
@@ -20,10 +22,11 @@ export const LiveMessageBlock = memo(function LiveMessageBlock({
   const adapted = useMemo(
     () =>
       adaptLiveMessageFromAcp(message, {
+        isLiveStreaming: isStreaming,
         toolCallFailedText: sharedT("toolCallFailed"),
         planUpdatedText: sharedT("planUpdated"),
       }),
-    [message, sharedT]
+    [message, isStreaming, sharedT]
   )
 
   return (

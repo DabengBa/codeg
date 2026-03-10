@@ -66,6 +66,7 @@ type ThreadRenderItem =
       key: string
       kind: "live"
       message: LiveMessage
+      isStreaming: boolean
     }
 
 function fallbackExtractUserResources(
@@ -315,11 +316,18 @@ export function MessageListView({
         key: `live-${liveMessage.id}`,
         kind: "live",
         message: liveMessage,
+        isStreaming: connStatus === "prompting",
       })
     }
 
     return items
-  }, [resolvedGroups, resolvedPendingGroups, showLiveMessage, liveMessage])
+  }, [
+    resolvedGroups,
+    resolvedPendingGroups,
+    showLiveMessage,
+    liveMessage,
+    connStatus,
+  ])
 
   const renderThreadItem = useCallback((item: ThreadRenderItem) => {
     switch (item.kind) {
@@ -330,7 +338,12 @@ export function MessageListView({
       case "typing":
         return <PendingTypingIndicator />
       case "live":
-        return <LiveMessageBlock message={item.message} />
+        return (
+          <LiveMessageBlock
+            message={item.message}
+            isStreaming={item.isStreaming}
+          />
+        )
       default:
         return null
     }

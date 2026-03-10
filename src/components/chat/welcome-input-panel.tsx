@@ -97,6 +97,7 @@ type WelcomeThreadItem =
       key: string
       kind: "live"
       message: LiveMessage
+      isStreaming: boolean
     }
 
 const WelcomeHistoryMessage = memo(function WelcomeHistoryMessage({
@@ -811,14 +812,20 @@ export function WelcomeInputPanel({
         key: `live-${conn.liveMessage.id}`,
         kind: "live",
         message: conn.liveMessage,
+        isStreaming: connStatus === "prompting",
       })
     }
     return items
-  }, [history, showLive, conn.liveMessage])
+  }, [history, showLive, conn.liveMessage, connStatus])
 
   const renderThreadItem = useCallback((item: WelcomeThreadItem) => {
     if (item.kind === "live") {
-      return <LiveMessageBlock message={item.message} />
+      return (
+        <LiveMessageBlock
+          message={item.message}
+          isStreaming={item.isStreaming}
+        />
+      )
     }
     return <WelcomeHistoryMessage message={item.message} />
   }, [])
