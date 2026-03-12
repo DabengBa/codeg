@@ -29,11 +29,7 @@ import {
   updateConversationStatus,
 } from "@/lib/tauri"
 import { useConversationRuntime } from "@/contexts/conversation-runtime-context"
-import {
-  invalidateDetailCache,
-  refreshDetailCache,
-  useDbMessageDetail,
-} from "@/hooks/use-db-message-detail"
+import { useConversationDetail } from "@/hooks/use-conversation-detail"
 import {
   extractUserImagesFromDraft,
   extractUserResourcesFromDraft,
@@ -143,17 +139,21 @@ const ConversationTabView = memo(function ConversationTabView({
   const { bindConversationTab } = useTabContext()
   const { setSessionStats } = useSessionStats()
   const {
-    acknowledgePersistedDetail,
     appendOptimisticTurn,
-    migrateConversation,
+    completeTurn,
+    refetchDetail,
+    removeConversation,
     setExternalId,
     setLiveMessage,
+    setPendingCleanup,
     setSyncState,
   } = useConversationRuntime()
 
-  const temporaryConversationId = useMemo(
-    () => buildVirtualConversationId(`draft-${tabId}`),
-    [tabId]
+  // Stable runtime session key — set once at mount, never changes.
+  // For new conversations this is a virtual (negative) ID; for existing
+  // conversations opened from the sidebar it equals the real DB ID.
+  const [effectiveConversationId] = useState(
+    () => conversationId ?? buildVirtualConversationId(`draft-${tabId}`)
   )
   const [createdConversationId, setCreatedConversationId] = useState<
     number | null
@@ -173,7 +173,11 @@ const ConversationTabView = memo(function ConversationTabView({
   const hasPersistedConversation = dbConversationId != null
   const canAutoConnect =
     hasPersistedConversation || (agentsLoaded && usableAgentCount > 0)
-  const effectiveConversationId = dbConversationId ?? temporaryConversationId
+
+  // Clear pendingCleanup when tab is (re)opened
+  useEffect(() => {
+    setPendingCleanup(effectiveConversationId, false)
+  }, [effectiveConversationId, setPendingCleanup])
 
   const latestReloadSignal = useRef(reloadSignal)
   const pendingReloadState = useRef<{
@@ -181,10 +185,10 @@ const ConversationTabView = memo(function ConversationTabView({
     sawLoading: boolean
   } | null>(null)
   const dbConvIdRef = useRef<number | null>(conversationId)
+  const mountedRef = useRef(true)
   const statusUpdatedRef = useRef(false)
   const selectedAgentRef = useRef(selectedAgent)
   const createConversationPendingRef = useRef(false)
-  const reconcileTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const externalIdSavedRef = useRef(false)
   const sessionIdRef = useRef<string | null>(null)
 
@@ -200,8 +204,7 @@ const ConversationTabView = memo(function ConversationTabView({
     detail,
     loading: detailLoading,
     error: detailError,
-    refetch: refetchConversationDetail,
-  } = useDbMessageDetail(effectiveConversationId)
+  } = useConversationDetail(effectiveConversationId)
 
   useEffect(() => {
     if (!isActive) return
@@ -271,56 +274,65 @@ const ConversationTabView = memo(function ConversationTabView({
     return conn.modes?.current_mode_id ?? connectionModes[0]?.id ?? null
   }, [conn.modes?.current_mode_id, connectionModes, modeId])
 
-  const clearReconcileTimer = useCallback(() => {
-    if (!reconcileTimerRef.current) return
-    clearTimeout(reconcileTimerRef.current)
-    reconcileTimerRef.current = null
-  }, [])
-
-  const refreshFromDb = useCallback(
-    async (refreshConversationId: number) => {
-      try {
-        const refreshed = await refreshDetailCache(refreshConversationId)
-        // Skip ACK during prompting to avoid clearing liveMessage /
-        // resetting syncState while streaming. The useEffect with the
-        // connStatus === "prompting" guard will handle it naturally
-        // once prompting ends.
-        if (connStatusRef.current === "prompting") return
-        acknowledgePersistedDetail(refreshConversationId, refreshed)
-      } catch (error) {
-        setSyncState(refreshConversationId, "failed")
-        console.error(
-          "[ConversationTabView] refresh detail cache failed:",
-          error
-        )
-      }
-    },
-    [acknowledgePersistedDetail, setSyncState]
-  )
-
   useEffect(() => {
     if (connSessionId) {
       sessionIdRef.current = connSessionId
     }
   }, [connSessionId])
 
+  // completeTurn MUST be declared BEFORE setLiveMessage so that React runs
+  // its cleanup/setup before setLiveMessage's cleanup. When connStatus
+  // transitions away from "prompting", completeTurn snapshots and promotes
+  // the liveMessage first, then setLiveMessage's cleanup safely clears it.
+  const prevConnStatusRef = useRef(connStatus)
   useEffect(() => {
-    setLiveMessage(effectiveConversationId, conn.liveMessage ?? null)
+    const wasPrompting = prevConnStatusRef.current === "prompting"
+    prevConnStatusRef.current = connStatus
+    if (!wasPrompting || connStatus === "prompting") return
+
+    // Turn completed — promote liveMessage + optimisticTurns to localTurns
+    completeTurn(effectiveConversationId)
+
+    const persistedId = dbConvIdRef.current
+    if (!persistedId) return
+
+    if (connStatus !== "disconnected" && connStatus !== "error") {
+      updateConversationStatus(persistedId, "pending_review")
+        .then(() => refreshConversations())
+        .catch((e: unknown) =>
+          console.error("[ConversationTabView] update status:", e)
+        )
+    }
+  }, [completeTurn, connStatus, effectiveConversationId, refreshConversations])
+
+  useEffect(() => {
+    // Only sync non-null liveMessage updates to state. When conn.liveMessage
+    // goes null (agent finished streaming), don't clear state.liveMessage —
+    // COMPLETE_TURN needs to snapshot it when connStatus transitions.
+    // Clearing is handled by COMPLETE_TURN (sets liveMessage = null) and
+    // by this effect's cleanup (when not prompting).
+    if (conn.liveMessage != null) {
+      setLiveMessage(effectiveConversationId, conn.liveMessage)
+    }
     return () => {
-      setLiveMessage(effectiveConversationId, null)
+      // Don't clear liveMessage if agent is still responding — the session
+      // is kept via pendingCleanup, and clearing here would cause the
+      // SET_LIVE_MESSAGE guard to block the reconnect liveMessage on reopen.
+      if (connStatusRef.current !== "prompting") {
+        setLiveMessage(effectiveConversationId, null)
+      }
     }
   }, [conn.liveMessage, effectiveConversationId, setLiveMessage])
 
   useEffect(() => {
-    if (!dbConversationId) return
-    setExternalId(dbConversationId, detail?.summary.external_id ?? null)
-  }, [dbConversationId, detail?.summary.external_id, setExternalId])
+    if (effectiveConversationId <= 0) return
+    setExternalId(effectiveConversationId, detail?.summary.external_id ?? null)
+  }, [effectiveConversationId, detail?.summary.external_id, setExternalId])
 
   useEffect(() => {
-    if (!dbConversationId) return
     if (!connSessionId) return
-    setExternalId(dbConversationId, connSessionId)
-  }, [connSessionId, dbConversationId, setExternalId])
+    setExternalId(effectiveConversationId, connSessionId)
+  }, [connSessionId, effectiveConversationId, setExternalId])
 
   const trySaveExternalId = useCallback(() => {
     if (
@@ -344,45 +356,6 @@ const ConversationTabView = memo(function ConversationTabView({
       trySaveExternalId()
     }
   }, [connSessionId, trySaveExternalId])
-
-  useEffect(() => {
-    if (!dbConversationId) return
-    if (!detail) return
-    if (connStatus === "prompting") return
-    acknowledgePersistedDetail(dbConversationId, detail)
-  }, [acknowledgePersistedDetail, connStatus, dbConversationId, detail])
-
-  const prevConnStatusRef = useRef(connStatus)
-  useEffect(() => {
-    const wasPrompting = prevConnStatusRef.current === "prompting"
-    prevConnStatusRef.current = connStatus
-    if (!wasPrompting || connStatus === "prompting") return
-
-    setSyncState(effectiveConversationId, "reconciling")
-    const persistedId = dbConvIdRef.current
-    if (!persistedId) return
-
-    invalidateDetailCache(persistedId)
-    clearReconcileTimer()
-    reconcileTimerRef.current = setTimeout(() => {
-      void refreshFromDb(persistedId)
-    }, 1200)
-
-    if (connStatus !== "disconnected" && connStatus !== "error") {
-      updateConversationStatus(persistedId, "pending_review")
-        .then(() => refreshConversations())
-        .catch((e: unknown) =>
-          console.error("[ConversationTabView] update status:", e)
-        )
-    }
-  }, [
-    clearReconcileTimer,
-    connStatus,
-    effectiveConversationId,
-    refreshConversations,
-    refreshFromDb,
-    setSyncState,
-  ])
 
   useEffect(() => {
     if (connStatus === "connected" || connStatus === "prompting") {
@@ -413,8 +386,8 @@ const ConversationTabView = memo(function ConversationTabView({
       signal: reloadSignal,
       sawLoading: false,
     }
-    refetchConversationDetail()
-  }, [dbConversationId, reloadSignal, refetchConversationDetail])
+    refetchDetail(dbConversationId)
+  }, [dbConversationId, reloadSignal, refetchDetail])
 
   useEffect(() => {
     const pending = pendingReloadState.current
@@ -437,7 +410,19 @@ const ConversationTabView = memo(function ConversationTabView({
     toast.success(t("reloaded"))
   }, [detailLoading, detailError, t])
 
-  useEffect(() => clearReconcileTimer, [clearReconcileTimer])
+  // Cleanup runtime data on unmount (tab close)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      if (connStatusRef.current === "prompting") {
+        // Agent still responding — mark for deferred cleanup
+        setPendingCleanup(effectiveConversationId, true)
+      } else {
+        removeConversation(effectiveConversationId)
+      }
+    }
+  }, [effectiveConversationId, removeConversation, setPendingCleanup])
 
   const handleSend = useCallback(
     (draft: PromptDraft, selectedModeIdArg?: string | null) => {
@@ -481,22 +466,31 @@ const ConversationTabView = memo(function ConversationTabView({
       createConversation(folderId, selectedAgent, title)
         .then((newConversationId) => {
           dbConvIdRef.current = newConversationId
+          // Set external ID on the stable virtual session (no migration needed —
+          // effectiveConversationId never changes, so the session stays in place)
+          setExternalId(effectiveConversationId, sessionIdRef.current ?? null)
+          trySaveExternalId()
+
+          if (!mountedRef.current) {
+            // Component unmounted while creating — mark for deferred cleanup
+            // so the background turn_complete handler can clean up later.
+            setPendingCleanup(effectiveConversationId, true)
+            refreshConversations()
+            return
+          }
+
           setCreatedConversationId(newConversationId)
-          migrateConversation(temporaryConversationId, newConversationId)
-          setExternalId(newConversationId, sessionIdRef.current ?? null)
           bindConversationTab(tabId, newConversationId, selectedAgent, title)
           moveMessageInputDraft(
             buildNewConversationDraftStorageKey({ folderId }),
             buildConversationDraftStorageKey(selectedAgent, newConversationId)
           )
-          trySaveExternalId()
           statusUpdatedRef.current = false
           updateConversationStatus(newConversationId, "in_progress")
             .then(() => refreshConversations())
             .catch((e: unknown) =>
               console.error("[ConversationTabView] update status:", e)
             )
-          void refreshFromDb(newConversationId)
         })
         .catch((e: unknown) =>
           console.error("[ConversationTabView] create conversation:", e)
@@ -514,16 +508,13 @@ const ConversationTabView = memo(function ConversationTabView({
       folderId,
       hasPersistedConversation,
       lifecycleSend,
-      migrateConversation,
       refreshConversations,
-      refreshFromDb,
       selectedAgent,
       setExternalId,
       setSyncState,
       sharedT,
       tWelcome,
       tabId,
-      temporaryConversationId,
       trySaveExternalId,
     ]
   )
@@ -598,8 +589,8 @@ const ConversationTabView = memo(function ConversationTabView({
     ]
   )
 
-  const showDraftHeader = !hasPersistedConversation
-  const isWelcomeMode = showDraftHeader && !hasSentMessage
+  const showDraftHeader = !hasPersistedConversation && !hasSentMessage
+  const isWelcomeMode = showDraftHeader
 
   const messageListNode = (
     <MessageListView
@@ -611,7 +602,7 @@ const ConversationTabView = memo(function ConversationTabView({
       sessionStats={detail?.session_stats ?? null}
       detailLoading={detailLoading}
       detailError={detailError}
-      hideEmptyState={showDraftHeader}
+      hideEmptyState={!hasPersistedConversation || hasSentMessage}
     />
   )
 
@@ -735,9 +726,10 @@ const ConversationTabView = memo(function ConversationTabView({
 export function ConversationDetailPanel() {
   const t = useTranslations("Folder.conversation")
   const {
-    acknowledgePersistedDetail,
+    completeTurn: runtimeCompleteTurn,
     getConversationIdByExternalId,
-    setSyncState,
+    getSession,
+    removeConversation: runtimeRemoveConversation,
   } = useConversationRuntime()
   const { folder, newConversation, conversations, refreshConversations } =
     useFolderContext()
@@ -752,10 +744,6 @@ export function ConversationDetailPanel() {
   const [reloadByTabId, setReloadByTabId] = useState<Record<string, number>>({})
   const tabsRef = useRef(tabs)
   const conversationsRef = useRef(conversations)
-  const pendingClosedConversationIdsRef = useRef<Set<number>>(new Set())
-  const pendingRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  )
 
   useEffect(() => {
     tabsRef.current = tabs
@@ -765,64 +753,10 @@ export function ConversationDetailPanel() {
     conversationsRef.current = conversations
   }, [conversations])
 
-  const flushClosedConversationRefresh = useCallback(() => {
-    const conversationIds = Array.from(pendingClosedConversationIdsRef.current)
-    if (conversationIds.length === 0) return
-    pendingClosedConversationIdsRef.current.clear()
-
-    void (async () => {
-      await Promise.all(
-        conversationIds.map(async (conversationId) => {
-          const summary =
-            conversationsRef.current.find(
-              (item) => item.id === conversationId
-            ) ?? null
-          if (summary?.status === "in_progress") {
-            try {
-              await updateConversationStatus(conversationId, "pending_review")
-            } catch (error) {
-              console.error(
-                "[ConversationDetailPanel] background update status failed:",
-                error
-              )
-            }
-          }
-
-          try {
-            const detail = await refreshDetailCache(conversationId)
-            acknowledgePersistedDetail(conversationId, detail)
-          } catch (error) {
-            setSyncState(conversationId, "failed")
-            console.error(
-              "[ConversationDetailPanel] background detail cache refresh failed:",
-              error
-            )
-          }
-        })
-      )
-
-      refreshConversations()
-    })()
-  }, [acknowledgePersistedDetail, refreshConversations, setSyncState])
-
-  const scheduleClosedConversationRefresh = useCallback(
-    (conversationId: number) => {
-      pendingClosedConversationIdsRef.current.add(conversationId)
-      if (pendingRefreshTimerRef.current) return
-
-      // Delay briefly so local session file writes can settle.
-      pendingRefreshTimerRef.current = setTimeout(() => {
-        pendingRefreshTimerRef.current = null
-        flushClosedConversationRefresh()
-      }, 1200)
-    },
-    [flushClosedConversationRefresh]
-  )
-
+  // Background turn_complete handler: for conversations not open in tabs
   useEffect(() => {
     let cancelled = false
     let unlisten: (() => void | Promise<void>) | null = null
-    const pendingClosedConversationIds = pendingClosedConversationIdsRef.current
 
     void import("@tauri-apps/api/event")
       .then(({ listen }) =>
@@ -840,15 +774,40 @@ export function ConversationDetailPanel() {
             runtimeConversationId ?? summary?.id ?? null
           if (!matchedConversationId) return
 
+          // Check both virtual (runtime) ID and real DB ID — after
+          // bindConversationTab the tab stores the real DB ID while the
+          // runtime session may still be keyed by the virtual ID.
+          const dbId2 = summary?.id
           const isOpenInTabs = tabsRef.current.some(
-            (tab) => tab.conversationId === matchedConversationId
+            (tab) =>
+              tab.conversationId === matchedConversationId ||
+              (dbId2 != null && tab.conversationId === dbId2)
           )
           if (isOpenInTabs) return
 
-          invalidateDetailCache(matchedConversationId)
-          setSyncState(matchedConversationId, "reconciling")
+          // Promote liveMessage + optimisticTurns to localTurns immediately
+          runtimeCompleteTurn(matchedConversationId)
 
-          scheduleClosedConversationRefresh(matchedConversationId)
+          // If tab was closed while agent was responding, clean up now
+          const session = getSession(matchedConversationId)
+          if (session?.pendingCleanup) {
+            runtimeRemoveConversation(matchedConversationId)
+          }
+
+          // Update conversation status — use the DB summary (found by
+          // external_id above) since matchedConversationId may be a virtual
+          // (negative) ID that won't match any DB record.
+          const dbId = summary?.id ?? (matchedConversationId > 0 ? matchedConversationId : null)
+          if (dbId && (!summary || summary.status === "in_progress")) {
+            updateConversationStatus(dbId, "pending_review")
+              .then(() => refreshConversations())
+              .catch((error: unknown) =>
+                console.error(
+                  "[ConversationDetailPanel] background update status:",
+                  error
+                )
+              )
+          }
         })
       )
       .then((dispose) => {
@@ -867,11 +826,6 @@ export function ConversationDetailPanel() {
 
     return () => {
       cancelled = true
-      if (pendingRefreshTimerRef.current) {
-        clearTimeout(pendingRefreshTimerRef.current)
-        pendingRefreshTimerRef.current = null
-      }
-      pendingClosedConversationIds.clear()
       disposeTauriListener(
         unlisten,
         "ConversationDetailPanel.backgroundRefresh"
@@ -879,9 +833,10 @@ export function ConversationDetailPanel() {
     }
   }, [
     getConversationIdByExternalId,
-    acknowledgePersistedDetail,
-    scheduleClosedConversationRefresh,
-    setSyncState,
+    getSession,
+    runtimeCompleteTurn,
+    runtimeRemoveConversation,
+    refreshConversations,
   ])
 
   const hasNoTabs = tabs.length === 0 && !activeTabId

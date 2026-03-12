@@ -5,10 +5,9 @@ import { useConversationRuntime } from "@/contexts/conversation-runtime-context"
 import { ContentPartsRenderer } from "./content-parts-renderer"
 import {
   adaptMessageTurns,
-  type MessageGroup,
+  type AdaptedContentPart,
   type UserImageDisplay,
   type UserResourceDisplay,
-  groupAdaptedMessages,
 } from "@/lib/adapters/ai-elements-adapter"
 import { TurnStats } from "./turn-stats"
 import { LiveTurnStats } from "./live-turn-stats"
@@ -40,9 +39,16 @@ interface MessageListViewProps {
   hideEmptyState?: boolean
 }
 
-interface ResolvedMessageGroup extends MessageGroup {
+interface ResolvedMessageGroup {
+  id: string
+  role: "user" | "assistant" | "system"
+  parts: AdaptedContentPart[]
   resources: UserResourceDisplay[]
   images: UserImageDisplay[]
+  usage?: import("@/lib/types").TurnUsage | null
+  duration_ms?: number | null
+  model?: string | null
+  models?: string[]
 }
 
 type ThreadRenderItem =
@@ -186,36 +192,27 @@ export function MessageListView({
       (_, index) => timelineTurns[index].phase !== "streaming"
     )
 
-    // Group adapted messages per phase-chunk to prevent merging
-    // assistant turns across phase boundaries (e.g. persisted + streaming).
-    const items: ThreadRenderItem[] = []
-    let chunkStart = 0
-    while (chunkStart < allAdapted.length) {
-      const chunkPhase = timelineTurns[chunkStart].phase
-      let chunkEnd = chunkStart + 1
-      while (
-        chunkEnd < allAdapted.length &&
-        timelineTurns[chunkEnd].phase === chunkPhase
-      ) {
-        chunkEnd++
+    // Map each adapted message directly to a render item (1:1).
+    // Backend group_into_turns() already ensures each turn is a complete unit.
+    const items: ThreadRenderItem[] = allAdapted.map((msg, i) => {
+      const phase = timelineTurns[i].phase
+      const role = msg.role === "tool" ? "assistant" : msg.role
+      return {
+        key: `${phase}-${msg.id}-${i}`,
+        kind: "turn" as const,
+        group: {
+          id: msg.id,
+          role,
+          parts: msg.content,
+          resources: msg.userResources ?? [],
+          images: msg.userImages ?? [],
+          usage: msg.usage,
+          duration_ms: msg.duration_ms,
+          model: msg.model,
+        },
+        phase,
       }
-      const chunkAdapted = allAdapted.slice(chunkStart, chunkEnd)
-      const groups = groupAdaptedMessages(chunkAdapted)
-      for (let i = 0; i < groups.length; i++) {
-        const group = groups[i]
-        items.push({
-          key: `${chunkPhase}-${chunkStart}-${group.id}-${i}`,
-          kind: "turn",
-          group: {
-            ...group,
-            resources: group.userResources ?? [],
-            images: group.userImages ?? [],
-          },
-          phase: chunkPhase,
-        })
-      }
-      chunkStart = chunkEnd
-    }
+    })
 
     const lastPhase = timelineTurns[timelineTurns.length - 1]?.phase ?? null
     if (

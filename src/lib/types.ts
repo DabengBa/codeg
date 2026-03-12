@@ -80,13 +80,6 @@ export type ContentBlock =
     }
   | { type: "thinking"; text: string }
 
-export interface UnifiedMessage {
-  id: string
-  role: MessageRole
-  content: ContentBlock[]
-  timestamp: string
-}
-
 export type TurnRole = "user" | "assistant" | "system"
 
 export interface TurnUsage {

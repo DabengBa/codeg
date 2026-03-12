@@ -7,7 +7,7 @@ import { useFolderContext } from "@/contexts/folder-context"
 import { useTabContext } from "@/contexts/tab-context"
 import { useConversationRuntime } from "@/contexts/conversation-runtime-context"
 import { useWorkspaceContext } from "@/contexts/workspace-context"
-import { useDbMessageDetail } from "@/hooks/use-db-message-detail"
+import { useConversationDetail } from "@/hooks/use-conversation-detail"
 import { extractSessionFilesGrouped } from "@/lib/session-files"
 import {
   CommitFileAdditions,
@@ -54,7 +54,7 @@ function toFolderRelativePath(filePath: string, folderPath?: string): string {
 
 function SessionFilesContent({ conversationId }: { conversationId: number }) {
   const t = useTranslations("Folder.sessionFiles")
-  const { loading } = useDbMessageDetail(conversationId)
+  const { loading } = useConversationDetail(conversationId)
   const { getTimelineTurns } = useConversationRuntime()
   const { openSessionFileDiff } = useWorkspaceContext()
   const { folder } = useFolderContext()
