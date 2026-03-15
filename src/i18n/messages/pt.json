@@ -1238,6 +1238,19 @@
           "unknown": "Desconhecida"
         }
       },
+      "sessionLocatorOverlay": {
+        "title": "Session Locator",
+        "collapseAria": "Collapse session locator",
+        "collapsedSummary": "Locator {count}",
+        "userLabel": "User",
+        "assistantLabel": "AI",
+        "toolOnly": "Tool-only response",
+        "attachmentOnly": "Images/attachments",
+        "pendingReply": "Awaiting reply",
+        "emptyPreview": "No preview available",
+        "jumpToUserAria": "Jump to user message",
+        "jumpToAssistantAria": "Jump to AI reply"
+      },
       "permissionDialog": {
         "subtitle": "O agente solicita permissão para continuar este turno.",
         "kindFallbackTool": "ferramenta",

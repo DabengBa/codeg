@@ -8,6 +8,7 @@ import {
   countUnifiedDiffLineChanges,
   estimateChangedLineStats,
 } from "@/lib/line-change-stats"
+import { cn } from "@/lib/utils"
 import { MessageResponse } from "@/components/ai-elements/message"
 import {
   Tool,
@@ -2300,37 +2301,77 @@ const ReasoningPart = memo(function ReasoningPart({
 interface ContentPartsRendererProps {
   parts: AdaptedContentPart[]
   role?: MessageRole
+  highlightedPartIndex?: number | null
+  highlightToken?: string | number
 }
 
 export const ContentPartsRenderer = memo(function ContentPartsRenderer({
   parts,
   role,
+  highlightedPartIndex = null,
+  highlightToken,
 }: ContentPartsRendererProps) {
+  const getPartClassName = (index: number) =>
+    cn(
+      "relative z-10 rounded-xl transition-[background-color,box-shadow,outline-color] duration-700",
+      highlightedPartIndex === index &&
+        highlightToken !== undefined &&
+        "bg-primary/20 outline outline-2 outline-primary/55 outline-offset-2 shadow-lg shadow-primary/15 dark:bg-primary/25"
+    )
+
   return (
     <div className="space-y-2">
       {parts.map((part, i) => {
         if (part.type === "text") {
           return (
-            <TextPart
+            <div
               key={`text-${i}`}
-              text={part.text}
-              preserveNewlines={role === "user"}
-            />
+              className={getPartClassName(i)}
+              data-content-part-index={i}
+              data-content-part-type="text"
+            >
+              <TextPart text={part.text} preserveNewlines={role === "user"} />
+            </div>
           )
         }
 
         if (part.type === "tool-call") {
-          return <ToolCallPart key={`tc-${part.toolCallId ?? i}`} part={part} />
+          return (
+            <div
+              key={`tc-${part.toolCallId ?? i}`}
+              className={getPartClassName(i)}
+              data-content-part-index={i}
+              data-content-part-type="tool-call"
+            >
+              <ToolCallPart part={part} />
+            </div>
+          )
         }
 
         if (part.type === "tool-result") {
           return (
-            <ToolResultPart key={`tr-${part.toolCallId ?? i}`} part={part} />
+            <div
+              key={`tr-${part.toolCallId ?? i}`}
+              className={getPartClassName(i)}
+              data-content-part-index={i}
+              data-content-part-type="tool-result"
+            >
+              <ToolResultPart part={part} />
+            </div>
           )
         }
 
         if (part.type === "reasoning") {
-          return <ReasoningPart key={`reasoning-${i}`} part={part} />
+          return (
+            <div
+              key={`reasoning-${i}`}
+              className={getPartClassName(i)}
+              data-content-part-index={i}
+              data-content-part-type="reasoning"
+            >
+              <ReasoningPart part={part} />
+            </div>
+          )
         }
 
         return null
