@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef } from "react"
 import { useConversationRuntime } from "@/contexts/conversation-runtime-context"
 import { ContentPartsRenderer } from "./content-parts-renderer"
 import {
@@ -29,10 +29,10 @@ import {
   VirtualizedMessageThread,
   type VirtualizedMessageThreadHandle,
 } from "@/components/message/virtualized-message-thread"
+import { useMessageHighlight } from "@/components/message/use-message-highlight"
 import {
   buildSessionLocatorItems,
   type SessionLocatorRawTurn,
-  type SessionLocatorTarget,
 } from "@/lib/session-locator"
 import { cn } from "@/lib/utils"
 import { useStickToBottomContext } from "use-stick-to-bottom"
@@ -73,19 +73,6 @@ type ThreadRenderItem =
       kind: "typing"
     }
 
-interface HighlightedLocatorTarget {
-  turnId: string
-  partIndex: number | null
-  token: number
-}
-
-const LOCATOR_HIGHLIGHT_DURATION_MS = 1800
-const LOCATOR_TARGET_TOP_OFFSET_PX = 88
-const LOCATOR_TARGET_ALIGNMENT_TOLERANCE_PX = 12
-const LOCATOR_TARGET_VISIBILITY_PADDING_PX = 24
-const LOCATOR_TARGET_MAX_ALIGNMENT_ATTEMPTS = 36
-const LOCATOR_ALIGNMENT_FRAME_DELAY = 2
-
 const HistoricalMessageGroup = memo(function HistoricalMessageGroup({
   group,
   dimmed = false,
@@ -102,12 +89,14 @@ const HistoricalMessageGroup = memo(function HistoricalMessageGroup({
   return (
     <div
       className={cn(
+        "rounded-2xl",
         dimmed && "opacity-70",
         highlightTurn &&
           highlightToken !== undefined &&
-          "rounded-2xl bg-primary/10 ring-2 ring-primary/35 shadow-md shadow-primary/10 transition-[background-color,box-shadow,ring-color] duration-700 dark:bg-primary/15"
+          "session-locator-turn-highlight"
       )}
       data-turn-id={group.id}
+      data-highlight-token={highlightToken}
     >
       <Message from={group.role}>
         {group.role === "user" && group.images.length > 0 ? (
@@ -196,24 +185,16 @@ export function MessageListView({
   const { setSessionStats } = useSessionStats()
   const rootRef = useRef<HTMLDivElement>(null)
   const threadRef = useRef<VirtualizedMessageThreadHandle | null>(null)
-  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const locatorJumpTokenRef = useRef(0)
-  const [highlightedTarget, setHighlightedTarget] =
-    useState<HighlightedLocatorTarget | null>(null)
+  const { highlightedTarget, jumpToTarget } = useMessageHighlight({
+    rootRef,
+    threadRef,
+  })
 
   useEffect(() => {
     if (isActive) {
       setSessionStats(sessionStats)
     }
   }, [isActive, sessionStats, setSessionStats])
-
-  useEffect(() => {
-    return () => {
-      if (highlightTimeoutRef.current) {
-        clearTimeout(highlightTimeoutRef.current)
-      }
-    }
-  }, [])
 
   const shouldUseSmoothResize = !(
     isActive &&
@@ -365,116 +346,6 @@ export function MessageListView({
 
   const agentPlanOverlayKey = liveMessage?.id ?? `history-${conversationId}`
   const sessionLocatorKey = `conversation-${conversationId}`
-  const handleJumpToTarget = useCallback((target: SessionLocatorTarget) => {
-    locatorJumpTokenRef.current += 1
-    const activeJumpToken = locatorJumpTokenRef.current
-
-    const nextHighlight: HighlightedLocatorTarget = {
-      turnId: target.turnId,
-      partIndex: target.partIndex,
-      token: Date.now(),
-    }
-
-    if (highlightTimeoutRef.current) {
-      clearTimeout(highlightTimeoutRef.current)
-    }
-
-    setHighlightedTarget(null)
-    threadRef.current?.scrollToIndex(target.threadIndex, {
-      align: "start",
-      behavior: "auto",
-    })
-
-    let attempts = 0
-
-    const finalizeHighlight = () => {
-      if (locatorJumpTokenRef.current !== activeJumpToken) return
-
-      setHighlightedTarget(nextHighlight)
-      highlightTimeoutRef.current = setTimeout(() => {
-        setHighlightedTarget((current) =>
-          current?.token === nextHighlight.token ? null : current
-        )
-      }, LOCATOR_HIGHLIGHT_DURATION_MS)
-    }
-
-    const scheduleAlignment = (callback: () => void) => {
-      let remainingFrames = LOCATOR_ALIGNMENT_FRAME_DELAY
-
-      const tick = () => {
-        if (locatorJumpTokenRef.current !== activeJumpToken) return
-        if (remainingFrames <= 0) {
-          callback()
-          return
-        }
-
-        remainingFrames -= 1
-        requestAnimationFrame(tick)
-      }
-
-      requestAnimationFrame(tick)
-    }
-
-    const alignTarget = () => {
-      if (locatorJumpTokenRef.current !== activeJumpToken) return
-
-      const root = rootRef.current
-      const scrollElement = threadRef.current?.getScrollElement()
-      if (!root || !scrollElement) {
-        finalizeHighlight()
-        return
-      }
-
-      const turnElement = Array.from(
-        root.querySelectorAll<HTMLElement>("[data-turn-id]")
-      ).find((element) => element.dataset.turnId === target.turnId)
-
-      const targetElement =
-        target.partIndex === null
-          ? turnElement
-          : (turnElement?.querySelector<HTMLElement>(
-              `[data-content-part-index="${target.partIndex}"]`
-            ) ?? turnElement)
-
-      if (targetElement) {
-        const scrollRect = scrollElement.getBoundingClientRect()
-        const targetRect = targetElement.getBoundingClientRect()
-        const nextTop =
-          scrollElement.scrollTop +
-          (targetRect.top - scrollRect.top) -
-          LOCATOR_TARGET_TOP_OFFSET_PX
-        const anchorTop = scrollRect.top + LOCATOR_TARGET_TOP_OFFSET_PX
-        const distanceFromAnchor = targetRect.top - anchorTop
-        const isVisible =
-          targetRect.bottom >=
-            scrollRect.top + LOCATOR_TARGET_VISIBILITY_PADDING_PX &&
-          targetRect.top <=
-            scrollRect.bottom - LOCATOR_TARGET_VISIBILITY_PADDING_PX
-        const isAligned =
-          Math.abs(distanceFromAnchor) <= LOCATOR_TARGET_ALIGNMENT_TOLERANCE_PX
-
-        if (isVisible && isAligned) {
-          finalizeHighlight()
-          return
-        }
-
-        scrollElement.scrollTo({
-          top: Math.max(0, nextTop),
-          behavior: "auto",
-        })
-      }
-
-      attempts += 1
-      if (attempts < LOCATOR_TARGET_MAX_ALIGNMENT_ATTEMPTS) {
-        scheduleAlignment(alignTarget)
-      } else {
-        finalizeHighlight()
-      }
-    }
-
-    scheduleAlignment(alignTarget)
-  }, [])
-
   const hasRenderableContent = threadItems.length > 0 || Boolean(liveMessage)
 
   if (detailLoading && !hasRenderableContent) {
@@ -527,7 +398,7 @@ export function MessageListView({
       <SessionLocatorOverlay
         items={sessionLocatorItems}
         locatorKey={sessionLocatorKey}
-        onJumpToTarget={handleJumpToTarget}
+        onJumpToTarget={jumpToTarget}
       />
       <AgentPlanOverlay
         key={agentPlanOverlayKey}

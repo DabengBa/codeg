@@ -61,11 +61,11 @@
   - _建议提交_：`i18n: add session locator messages`
 
 - [x] **任务 2.5**：实现跳转后的目标高亮反馈，帮助用户快速确认命中的具体位置。
-  - _落点_：`src/components/message/message-list-view.tsx`、`src/components/message/content-parts-renderer.tsx`
+  - _落点_：`src/components/message/message-list-view.tsx`、`src/components/message/use-message-highlight.ts`、`src/components/message/content-parts-renderer.tsx`、`src/app/globals.css`
   - _依据_：`PRD §2 核心功能`、`PRD §3.3 交互细节`、`PRD §4 验收标准`；`TSD §3.1 MessageListView`、`TSD §3.5 跳转后高亮反馈`
   - _依赖_：任务 2.3
-  - _约束_：高亮必须自动消退；命中具体 part 时优先高亮该 part，并辅以 turn 级弱高亮提升可见性；没有可命中的 part 时回退为高亮整个 turn 容器。
-  - _验证_：Given 用户从会话定位点击一条用户摘要或 AI 摘要，When 跳转完成，Then 命中的目标内容会以明显可见的高亮反馈短暂突出，并在约 2 秒后自动消退。
+  - _约束_：高亮必须自动消退；命中具体 part 时优先高亮该 part，并辅以 turn 级弱高亮提升可见性；没有可命中的 part 时回退为高亮整个 turn 容器；高亮淡出优先使用 CSS 动画而不是生硬瞬间消失。
+  - _验证_：Given 用户从会话定位点击一条用户摘要或 AI 摘要，When 跳转完成，Then 命中的目标内容会以明显可见的高亮反馈短暂突出并自然淡出；Given 目标内容是 `tool-result` 或大代码块，Then 高亮边缘不会因为父容器裁剪而难以察觉。
   - _建议提交_：`feat: highlight session locator jump target`
 
 ## Phase 3: 边界验证与联调 (Edge Cases & Integration)
@@ -87,11 +87,11 @@
   - _建议提交_：`refactor: align session locator behavior with plan overlay`
 
 - [x] **任务 3.3**：验证会话定位接入后不改变现有消息区关键交互，包括计划卡片、输入链路、自动滚动与流式状态展示。
-  - _落点_：`src/components/message/message-list-view.tsx`（必要时仅做最小集成修正）
+  - _落点_：`src/components/message/message-list-view.tsx`、`src/components/message/use-message-highlight.ts`（必要时仅做最小集成修正）
   - _依据_：`PRD §3.5 性能红线`、`PRD §4 验收标准`；`TSD §1.2 实现边界`、`TSD §5.4 响应式与协同`
   - _依赖_：任务 2.3、任务 3.2
   - _约束_：任何为会话定位做的共享代码调整，都不能改变其他功能的既有行为语义或视觉风格。
-  - _验证_：Given prompting 中的会话同时显示计划卡片、LiveTurnStats 和输入区，When 启用并使用会话定位，Then 计划卡片仍可正常展开收起，发送后的自动滚动仍然有效，输入和流式状态展示无回归；Given assistant turn 前部存在大量 thinking / tool use 内容，When 点击 AI 摘要，Then 视口仍会继续校正到最终答复位置而不是停留在 turn 首屏。
+  - _验证_：Given prompting 中的会话同时显示计划卡片、LiveTurnStats 和输入区，When 启用并使用会话定位，Then 计划卡片仍可正常展开收起，发送后的自动滚动仍然有效，输入和流式状态展示无回归；Given assistant turn 前部存在大量 thinking / tool use 内容，When 点击 AI 摘要，Then 视口仍会继续校正到最终答复位置而不是停留在 turn 首屏；Given 跳转目标在可视上无法完全命中，Then 至少会输出可观测的开发态日志。
   - _建议提交_：`refactor: preserve message panel behavior while adding session locator`
 
 ## Phase 4: 验收标准对齐 (DoD Review)

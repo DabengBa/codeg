@@ -42,6 +42,7 @@
 
 - **新增纯逻辑模块**：`src/lib/session-locator.ts`
 - **新增 UI 组件**：`src/components/chat/session-locator-overlay.tsx`
+- **新增局部 Hook**：`src/components/message/use-message-highlight.ts`
 - **修改消息列表入口**：`src/components/message/message-list-view.tsx`
 - **修改虚拟滚动容器**：`src/components/message/virtualized-message-thread.tsx`
 - **新增国际化键**：`src/i18n/messages/*.json`
@@ -52,7 +53,7 @@
 - **避免为样式滥用 JS**：布局、间距、截断、透明度、hover / focus、响应式等纯样式问题，不额外引入 JS 状态或运行时计算。
 - **允许必要的 JS 参与行为层**：展开 / 折叠状态、虚拟列表跳转、宽度测量、键盘交互与可访问性控制，允许并且应当使用必要的 JS；不为了“纯 CSS”而牺牲可维护性和正确性。
 - **关于 `rem` 的使用**：`rem` 是长度单位，不是样式方案；本项目优先复用现有 Tailwind 类和设计 token，只有在现有 token 无法清晰表达时再谨慎补充 `rem` 尺寸。
-- **不新增全局样式污染**：本功能不新增全局 CSS 规则、不修改全局样式基线、不引入新的样式体系。
+- **谨慎使用全局样式**：原则上不新增全局 CSS 污染；如确有必要，只允许新增以 `session-locator-*` 命名空间隔离的高亮动画样式，不修改全局样式基线，也不引入新的样式体系。
 - **变更范围控制**：本次 PRD / TSD 只关注“会话定位”能力本身；实现时允许修改少量共享集成点（如消息列表、虚拟滚动容器、国际化文案），但这些修改只能服务于会话定位接入，不能改变其他功能的既有交互、视觉风格或行为语义。
 
 ---
@@ -265,7 +266,8 @@ interface SessionLocatorOverlayProps {
 
 建议方案：
 
-- `MessageListView` 持有一个局部 `highlightedTarget` 状态，字段至少包含：
+- 使用 `useMessageHighlight` 这类局部 Hook 承载高亮与跳转校正逻辑，避免把定时器、取消令牌、滚动对齐全部堆叠在 `MessageListView` 中。
+- Hook 内部持有一个局部 `highlightedTarget` 状态，字段至少包含：
   - `turnId`
   - `partIndex`
   - `token`
@@ -274,7 +276,7 @@ interface SessionLocatorOverlayProps {
   2. 等待目标 turn / part 完成挂载，并基于真实滚动容器做对齐校正
   3. 若存在 `partIndex`，循环校正滚动位置，直到该 part 的顶部进入预期可视锚点；若没有 `partIndex`，则以整个 turn 为目标
   4. 同步设置 `highlightedTarget`，让目标 part 强高亮、对应 turn 弱高亮
-  5. 定时自动清除高亮
+  5. 视觉淡出优先由 CSS 动画负责，局部 state 只负责触发一次高亮并在动画窗口结束后清理脏状态
 - 若目标没有可用 `partIndex`，则回退为高亮对应 turn 容器。
 
 实现约束：
@@ -284,6 +286,8 @@ interface SessionLocatorOverlayProps {
 - 连续点击同一目标时，允许重新触发一次高亮。
 - 长 assistant turn 的定位准确性高于长距离 `smooth` 动画；远距离跳转使用虚拟列表粗定位 + DOM 二次校正，避免因为动态高度或测量延迟停留在 turn 首屏。
 - 校正滚动必须允许多帧重试，直到目标进入视口锚点或达到明确的重试上限，避免单次测量被虚拟列表动态高度误导。
+- part 级高亮不得依赖容易被父容器 `overflow: hidden` 裁剪的外扩 `outline-offset`；优先使用容器内侧可见的动画覆盖层或 inset ring。
+- 若达到重试上限仍无法精确命中目标，至少输出可观测的开发态日志，避免静默失败。
 
 ### 3.6 国际化
 
@@ -344,6 +348,7 @@ interface SessionLocatorOverlayProps {
 - 点击用户摘要、AI 摘要都能稳定命中目标；长 assistant turn 仍能落到最终答复而非停留在 turn 首屏
 - 长会话中展开目录和多次跳转无明显卡顿
 - 待回复轮次能出现且仅支持跳到用户消息
+- 高亮淡出自然，且 `tool-result` / 大代码块边缘不会出现明显裁剪
 - 消息区变窄时，定位卡片会按预期退化，不遮挡正文主路径
 - 焦点可见、键盘可操作
 - 中英文等多语言下卡片布局不崩坏

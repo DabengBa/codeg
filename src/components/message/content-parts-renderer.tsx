@@ -2313,10 +2313,10 @@ export const ContentPartsRenderer = memo(function ContentPartsRenderer({
 }: ContentPartsRendererProps) {
   const getPartClassName = (index: number) =>
     cn(
-      "relative z-10 rounded-xl transition-[background-color,box-shadow,outline-color] duration-700",
+      "relative z-10 rounded-xl",
       highlightedPartIndex === index &&
         highlightToken !== undefined &&
-        "bg-primary/20 outline outline-2 outline-primary/55 outline-offset-2 shadow-lg shadow-primary/15 dark:bg-primary/25"
+        "session-locator-part-highlight"
     )
 
   return (
@@ -2329,6 +2329,7 @@ export const ContentPartsRenderer = memo(function ContentPartsRenderer({
               className={getPartClassName(i)}
               data-content-part-index={i}
               data-content-part-type="text"
+              data-highlight-token={highlightToken}
             >
               <TextPart text={part.text} preserveNewlines={role === "user"} />
             </div>
@@ -2342,6 +2343,7 @@ export const ContentPartsRenderer = memo(function ContentPartsRenderer({
               className={getPartClassName(i)}
               data-content-part-index={i}
               data-content-part-type="tool-call"
+              data-highlight-token={highlightToken}
             >
               <ToolCallPart part={part} />
             </div>
@@ -2355,6 +2357,7 @@ export const ContentPartsRenderer = memo(function ContentPartsRenderer({
               className={getPartClassName(i)}
               data-content-part-index={i}
               data-content-part-type="tool-result"
+              data-highlight-token={highlightToken}
             >
               <ToolResultPart part={part} />
             </div>
@@ -2368,6 +2371,7 @@ export const ContentPartsRenderer = memo(function ContentPartsRenderer({
               className={getPartClassName(i)}
               data-content-part-index={i}
               data-content-part-type="reasoning"
+              data-highlight-token={highlightToken}
             >
               <ReasoningPart part={part} />
             </div>
