@@ -17,6 +17,7 @@ interface SessionLocatorOverlayProps {
   locatorKey?: string | null
   visible?: boolean
   defaultExpanded?: boolean
+  className?: string
   onJumpToTarget: (target: SessionLocatorTarget) => void
 }
 
@@ -78,9 +79,9 @@ const LocatorRow = memo(function LocatorRow({
     <button
       type="button"
       className={rowClassName}
-      aria-label={ariaLabel}
       onClick={onClick}
     >
+      {ariaLabel ? <span className="sr-only">{ariaLabel} </span> : null}
       <Badge
         variant="outline"
         className="mt-0.5 h-5 shrink-0 text-[10px] uppercase"
@@ -99,6 +100,7 @@ export const SessionLocatorOverlay = memo(function SessionLocatorOverlay({
   locatorKey,
   visible = true,
   defaultExpanded = false,
+  className,
   onJumpToTarget,
 }: SessionLocatorOverlayProps) {
   const t = useTranslations("Folder.chat.sessionLocatorOverlay")
@@ -126,12 +128,12 @@ export const SessionLocatorOverlay = memo(function SessionLocatorOverlay({
 
   if (!isExpanded) {
     return (
-      <div className="pointer-events-none absolute left-8 top-4 z-20 flex">
+      <div className={cn("pointer-events-auto flex", className)}>
         <Button
           type="button"
           variant="secondary"
           size="sm"
-          className="cursor-pointer pointer-events-auto shadow-md bg-secondary/70 hover:bg-secondary"
+          className="cursor-pointer shadow-md bg-secondary/70 hover:bg-secondary"
           onClick={() =>
             setCollapsedByLocatorKey((prev) => ({
               ...prev,
@@ -149,10 +151,10 @@ export const SessionLocatorOverlay = memo(function SessionLocatorOverlay({
 
   return (
     <div
-      className="pointer-events-none absolute left-8 top-4 z-20 flex max-w-[min(22rem,calc(100%-2rem))]"
+      className={cn("pointer-events-auto flex w-full sm:w-72", className)}
       data-locator-key={currentLocatorKey ?? undefined}
     >
-      <div className="pointer-events-auto w-72 max-w-full rounded-xl border bg-card/60 hover:bg-card/95 shadow-lg backdrop-blur transition-colors supports-[backdrop-filter]:bg-card/50 supports-[backdrop-filter]:hover:bg-card/85">
+      <div className="w-full max-w-full rounded-xl border bg-card/60 shadow-lg backdrop-blur transition-colors hover:bg-card/95 supports-[backdrop-filter]:bg-card/50 supports-[backdrop-filter]:hover:bg-card/85">
         <div className="flex items-center justify-between border-b px-3 py-2">
           <div className="flex min-w-0 items-center gap-2">
             <MapIcon className="h-4 w-4 text-muted-foreground" />

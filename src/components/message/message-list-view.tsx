@@ -14,7 +14,10 @@ import { LiveTurnStats } from "./live-turn-stats"
 import { UserResourceLinks } from "./user-resource-links"
 import { UserImageAttachments } from "./user-image-attachments"
 import { useSessionStats } from "@/contexts/session-stats-context"
-import { AgentPlanOverlay } from "@/components/chat/agent-plan-overlay"
+import {
+  AgentPlanOverlay,
+  getLatestPlanEntries,
+} from "@/components/chat/agent-plan-overlay"
 import { SessionLocatorOverlay } from "@/components/chat/session-locator-overlay"
 import { MessageThread } from "@/components/ai-elements/message-thread"
 import { Message, MessageContent } from "@/components/ai-elements/message"
@@ -270,6 +273,10 @@ export function MessageListView({
     () => buildPlanKey(historicalPlanEntries),
     [historicalPlanEntries]
   )
+  const livePlanEntries = useMemo(
+    () => getLatestPlanEntries(liveMessage ?? null),
+    [liveMessage]
+  )
 
   const locatorRawTurns = useMemo<SessionLocatorRawTurn[]>(
     () =>
@@ -309,14 +316,17 @@ export function MessageListView({
       switch (item.kind) {
         case "turn": {
           const isHighlightedTurn = highlightedTarget?.turnId === item.group.id
+          const highlightedPartIndex = isHighlightedTurn
+            ? highlightedTarget.partIndex
+            : null
+          const shouldHighlightWholeTurn =
+            isHighlightedTurn && highlightedPartIndex === null
           return (
             <HistoricalMessageGroup
               group={item.group}
               dimmed={item.phase === "optimistic"}
-              highlightedPartIndex={
-                isHighlightedTurn ? highlightedTarget.partIndex : null
-              }
-              highlightTurn={isHighlightedTurn}
+              highlightedPartIndex={highlightedPartIndex}
+              highlightTurn={shouldHighlightWholeTurn}
               highlightToken={
                 isHighlightedTurn ? highlightedTarget.token : undefined
               }
@@ -347,6 +357,9 @@ export function MessageListView({
   const agentPlanOverlayKey = liveMessage?.id ?? `history-${conversationId}`
   const sessionLocatorKey = `conversation-${conversationId}`
   const hasRenderableContent = threadItems.length > 0 || Boolean(liveMessage)
+  const hasSessionLocatorOverlay = sessionLocatorItems.length > 0
+  const hasAgentPlanOverlay =
+    livePlanEntries.length > 0 || historicalPlanEntries.length > 0
 
   if (detailLoading && !hasRenderableContent) {
     return (
@@ -395,18 +408,30 @@ export function MessageListView({
           isStreaming={connStatus === "prompting"}
         />
       )}
-      <SessionLocatorOverlay
-        items={sessionLocatorItems}
-        locatorKey={sessionLocatorKey}
-        onJumpToTarget={jumpToTarget}
-      />
-      <AgentPlanOverlay
-        key={agentPlanOverlayKey}
-        message={liveMessage ?? null}
-        entries={historicalPlanEntries}
-        planKey={historicalPlanKey}
-        defaultExpanded={connStatus === "prompting"}
-      />
+      {(hasSessionLocatorOverlay || hasAgentPlanOverlay) && (
+        <div className="pointer-events-none absolute inset-x-0 top-4 z-20 px-4 sm:px-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            {hasSessionLocatorOverlay && (
+              <SessionLocatorOverlay
+                className="max-w-full"
+                items={sessionLocatorItems}
+                locatorKey={sessionLocatorKey}
+                onJumpToTarget={jumpToTarget}
+              />
+            )}
+            {hasAgentPlanOverlay && (
+              <AgentPlanOverlay
+                key={agentPlanOverlayKey}
+                className="max-w-full sm:ml-auto"
+                message={liveMessage ?? null}
+                entries={historicalPlanEntries}
+                planKey={historicalPlanKey}
+                defaultExpanded={connStatus === "prompting"}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
