@@ -1273,6 +1273,19 @@
           "unknown": "未知"
         }
       },
+      "sessionLocatorOverlay": {
+        "title": "會話定位",
+        "collapseAria": "摺疊會話定位",
+        "collapsedSummary": "定位 {count}",
+        "userLabel": "使用者",
+        "assistantLabel": "AI",
+        "toolOnly": "僅工具呼叫",
+        "attachmentOnly": "圖片/附件",
+        "pendingReply": "等待回覆",
+        "emptyPreview": "無可用摘要",
+        "jumpToUserAria": "跳轉到使用者訊息",
+        "jumpToAssistantAria": "跳轉到 AI 回覆"
+      },
       "permissionDialog": {
         "subtitle": "Agent 請求繼續目前輪次的權限。",
         "kindFallbackTool": "工具",

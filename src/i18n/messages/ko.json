@@ -1273,6 +1273,19 @@
           "unknown": "알 수 없음"
         }
       },
+      "sessionLocatorOverlay": {
+        "title": "Session Locator",
+        "collapseAria": "Collapse session locator",
+        "collapsedSummary": "Locator {count}",
+        "userLabel": "User",
+        "assistantLabel": "AI",
+        "toolOnly": "Tool-only response",
+        "attachmentOnly": "Images/attachments",
+        "pendingReply": "Awaiting reply",
+        "emptyPreview": "No preview available",
+        "jumpToUserAria": "Jump to user message",
+        "jumpToAssistantAria": "Jump to AI reply"
+      },
       "permissionDialog": {
         "subtitle": "에이전트가 이 턴을 계속하기 위한 권한을 요청합니다.",
         "kindFallbackTool": "도구",

@@ -1273,6 +1273,19 @@
           "unknown": "不明"
         }
       },
+      "sessionLocatorOverlay": {
+        "title": "Session Locator",
+        "collapseAria": "Collapse session locator",
+        "collapsedSummary": "Locator {count}",
+        "userLabel": "User",
+        "assistantLabel": "AI",
+        "toolOnly": "Tool-only response",
+        "attachmentOnly": "Images/attachments",
+        "pendingReply": "Awaiting reply",
+        "emptyPreview": "No preview available",
+        "jumpToUserAria": "Jump to user message",
+        "jumpToAssistantAria": "Jump to AI reply"
+      },
       "permissionDialog": {
         "subtitle": "エージェントがこのターンを続行するための許可を要求しています。",
         "kindFallbackTool": "ツール",
