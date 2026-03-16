@@ -1281,7 +1281,7 @@
           "unknown": "未知"
         }
       },
-      "sessionLocatorOverlay": {
+      "directoryLocator": {
         "title": "会话定位",
         "collapseAria": "折叠会话定位",
         "collapsedSummary": "定位 {count}",

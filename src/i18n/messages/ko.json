@@ -1281,18 +1281,18 @@
           "unknown": "알 수 없음"
         }
       },
-      "sessionLocatorOverlay": {
-        "title": "Session Locator",
-        "collapseAria": "Collapse session locator",
-        "collapsedSummary": "Locator {count}",
-        "userLabel": "User",
+      "directoryLocator": {
+        "title": "세션 위치",
+        "collapseAria": "세션 위치 접기",
+        "collapsedSummary": "위치 {count}",
+        "userLabel": "사용자",
         "assistantLabel": "AI",
-        "toolOnly": "Tool-only response",
-        "attachmentOnly": "Images/attachments",
+        "toolOnly": "도구 출력만",
+        "attachmentOnly": "이미지/첨부파일",
         "pendingReply": "응답 없음",
-        "emptyPreview": "No preview available",
-        "jumpToUserAria": "Jump to user message",
-        "jumpToAssistantAria": "Jump to AI reply"
+        "emptyPreview": "미리보기가 없습니다",
+        "jumpToUserAria": "사용자 메시지로 이동",
+        "jumpToAssistantAria": "AI 응답으로 이동"
       },
       "permissionDialog": {
         "subtitle": "에이전트가 이 턴을 계속하기 위한 권한을 요청합니다.",

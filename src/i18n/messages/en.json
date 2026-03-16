@@ -1281,7 +1281,7 @@
           "unknown": "Unknown"
         }
       },
-      "sessionLocatorOverlay": {
+      "directoryLocator": {
         "title": "Session Locator",
         "collapseAria": "Collapse session locator",
         "collapsedSummary": "Locator {count}",

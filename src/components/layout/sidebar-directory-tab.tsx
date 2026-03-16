@@ -108,7 +108,7 @@ function isSameTarget(
 
 export const SidebarDirectoryTab = memo(function SidebarDirectoryTab() {
   const t = useTranslations("Folder.sidebar")
-  const locatorT = useTranslations("Folder.chat.sessionLocatorOverlay")
+  const locatorT = useTranslations("Folder.chat.directoryLocator")
   const { selectedConversation } = useFolderContext()
   const { tabs, activeTabId } = useTabContext()
   const { getActiveTarget, jumpToTarget } = useSessionLocatorContext()
