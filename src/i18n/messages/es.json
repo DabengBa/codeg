@@ -1282,17 +1282,17 @@
         }
       },
       "sessionLocatorOverlay": {
-        "title": "Session Locator",
-        "collapseAria": "Collapse session locator",
-        "collapsedSummary": "Locator {count}",
-        "userLabel": "User",
-        "assistantLabel": "AI",
-        "toolOnly": "Tool-only response",
-        "attachmentOnly": "Images/attachments",
+        "title": "Localizador de sesión",
+        "collapseAria": "Contraer localizador de sesión",
+        "collapsedSummary": "Localizador {count}",
+        "userLabel": "Usuario",
+        "assistantLabel": "IA",
+        "toolOnly": "Solo salida de herramientas",
+        "attachmentOnly": "Imágenes/adjuntos",
         "pendingReply": "Sin respuesta",
-        "emptyPreview": "No preview available",
-        "jumpToUserAria": "Jump to user message",
-        "jumpToAssistantAria": "Jump to AI reply"
+        "emptyPreview": "No hay vista previa disponible",
+        "jumpToUserAria": "Ir al mensaje del usuario",
+        "jumpToAssistantAria": "Ir a la respuesta de la IA"
       },
       "permissionDialog": {
         "subtitle": "El agente solicita permiso para continuar este turno.",

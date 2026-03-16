@@ -1282,17 +1282,17 @@
         }
       },
       "sessionLocatorOverlay": {
-        "title": "Session Locator",
-        "collapseAria": "Collapse session locator",
-        "collapsedSummary": "Locator {count}",
-        "userLabel": "User",
-        "assistantLabel": "AI",
-        "toolOnly": "Tool-only response",
-        "attachmentOnly": "Images/attachments",
+        "title": "Sitzungsnavigator",
+        "collapseAria": "Sitzungsnavigator einklappen",
+        "collapsedSummary": "Navigator {count}",
+        "userLabel": "Benutzer",
+        "assistantLabel": "KI",
+        "toolOnly": "Nur Werkzeugausgabe",
+        "attachmentOnly": "Bilder/Anhänge",
         "pendingReply": "Keine Antwort",
-        "emptyPreview": "No preview available",
-        "jumpToUserAria": "Jump to user message",
-        "jumpToAssistantAria": "Jump to AI reply"
+        "emptyPreview": "Keine Vorschau verfügbar",
+        "jumpToUserAria": "Zur Benutzernachricht springen",
+        "jumpToAssistantAria": "Zur KI-Antwort springen"
       },
       "permissionDialog": {
         "subtitle": "Agent fordert Berechtigung an, um diesen Zug fortzusetzen.",

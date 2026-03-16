@@ -1282,17 +1282,17 @@
         }
       },
       "sessionLocatorOverlay": {
-        "title": "Session Locator",
-        "collapseAria": "Collapse session locator",
-        "collapsedSummary": "Locator {count}",
-        "userLabel": "User",
-        "assistantLabel": "AI",
-        "toolOnly": "Tool-only response",
-        "attachmentOnly": "Images/attachments",
+        "title": "Localisateur de session",
+        "collapseAria": "Réduire le localisateur de session",
+        "collapsedSummary": "Repères {count}",
+        "userLabel": "Utilisateur",
+        "assistantLabel": "IA",
+        "toolOnly": "Réponse d’outil uniquement",
+        "attachmentOnly": "Images/pièces jointes",
         "pendingReply": "Sans réponse",
-        "emptyPreview": "No preview available",
-        "jumpToUserAria": "Jump to user message",
-        "jumpToAssistantAria": "Jump to AI reply"
+        "emptyPreview": "Aucun aperçu disponible",
+        "jumpToUserAria": "Aller au message de l’utilisateur",
+        "jumpToAssistantAria": "Aller à la réponse de l’IA"
       },
       "permissionDialog": {
         "subtitle": "L'agent demande une autorisation pour continuer ce tour.",

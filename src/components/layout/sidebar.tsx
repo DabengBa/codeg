@@ -115,6 +115,7 @@ export function Sidebar() {
 
         <TabsContent
           value="conversations"
+          forceMount
           className="mt-0 flex-1 min-h-0 overflow-hidden"
         >
           <SidebarConversationList ref={listRef} />
@@ -122,6 +123,7 @@ export function Sidebar() {
 
         <TabsContent
           value="directory"
+          forceMount
           className="mt-0 flex-1 min-h-0 overflow-hidden"
         >
           <SidebarDirectoryTab />

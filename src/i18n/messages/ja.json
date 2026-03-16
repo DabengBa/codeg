@@ -1282,17 +1282,17 @@
         }
       },
       "sessionLocatorOverlay": {
-        "title": "Session Locator",
-        "collapseAria": "Collapse session locator",
-        "collapsedSummary": "Locator {count}",
-        "userLabel": "User",
+        "title": "セッションナビゲーター",
+        "collapseAria": "セッションナビゲーターを折りたたむ",
+        "collapsedSummary": "ナビ {count}",
+        "userLabel": "ユーザー",
         "assistantLabel": "AI",
-        "toolOnly": "Tool-only response",
-        "attachmentOnly": "Images/attachments",
+        "toolOnly": "ツール出力のみ",
+        "attachmentOnly": "画像/添付ファイル",
         "pendingReply": "返信なし",
-        "emptyPreview": "No preview available",
-        "jumpToUserAria": "Jump to user message",
-        "jumpToAssistantAria": "Jump to AI reply"
+        "emptyPreview": "プレビューはありません",
+        "jumpToUserAria": "ユーザーメッセージへ移動",
+        "jumpToAssistantAria": "AI の返信へ移動"
       },
       "permissionDialog": {
         "subtitle": "エージェントがこのターンを続行するための許可を要求しています。",

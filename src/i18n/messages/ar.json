@@ -1282,17 +1282,17 @@
         }
       },
       "sessionLocatorOverlay": {
-        "title": "Session Locator",
-        "collapseAria": "Collapse session locator",
-        "collapsedSummary": "Locator {count}",
-        "userLabel": "User",
+        "title": "محدد الجلسة",
+        "collapseAria": "طي محدد الجلسة",
+        "collapsedSummary": "المحدد {count}",
+        "userLabel": "المستخدم",
         "assistantLabel": "AI",
-        "toolOnly": "Tool-only response",
-        "attachmentOnly": "Images/attachments",
+        "toolOnly": "استجابة أدوات فقط",
+        "attachmentOnly": "صور/مرفقات",
         "pendingReply": "لا يوجد رد",
-        "emptyPreview": "No preview available",
-        "jumpToUserAria": "Jump to user message",
-        "jumpToAssistantAria": "Jump to AI reply"
+        "emptyPreview": "لا تتوفر معاينة",
+        "jumpToUserAria": "الانتقال إلى رسالة المستخدم",
+        "jumpToAssistantAria": "الانتقال إلى رد AI"
       },
       "permissionDialog": {
         "subtitle": "يطلب الوكيل إذنًا لمتابعة هذا الدور.",
