@@ -13,6 +13,7 @@ export interface HighlightedMessageTarget {
 interface UseMessageHighlightOptions {
   rootRef: RefObject<HTMLElement | null>
   threadRef: RefObject<VirtualizedMessageThreadHandle | null>
+  stopAutoStick?: () => void
 }
 
 const HIGHLIGHT_ANIMATION_DURATION_MS = 1800
@@ -42,6 +43,7 @@ function scheduleFrameDelay(frameDelay: number, callback: () => void) {
 export function useMessageHighlight({
   rootRef,
   threadRef,
+  stopAutoStick,
 }: UseMessageHighlightOptions) {
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const jumpTokenRef = useRef(0)
@@ -61,6 +63,8 @@ export function useMessageHighlight({
     (target: SessionLocatorTarget) => {
       jumpTokenRef.current += 1
       const activeJumpToken = jumpTokenRef.current
+
+      stopAutoStick?.()
 
       const nextHighlight: HighlightedMessageTarget = {
         turnId: target.turnId,
@@ -158,7 +162,7 @@ export function useMessageHighlight({
 
       scheduleFrameDelay(ALIGNMENT_FRAME_DELAY, alignTarget)
     },
-    [clearHighlightTimeout, rootRef, threadRef]
+    [clearHighlightTimeout, rootRef, stopAutoStick, threadRef]
   )
 
   return {

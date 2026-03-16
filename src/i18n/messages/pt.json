@@ -603,6 +603,9 @@
     },
     "sidebar": {
       "title": "Conversas",
+      "tabs": {
+        "directory": "Diretório"
+      },
       "locateActiveConversation": "Localizar conversa ativa",
       "expandAllGroups": "Expandir todos os grupos",
       "collapseAllGroups": "Recolher todos os grupos",
@@ -615,6 +618,11 @@
       "completeAllReviewTitle": "Concluir todas as sessões em revisão?",
       "completeAllReviewDescription": "Isso marcará como concluídas todas as {count, plural, one {# sessão} other {# sessões}} em Revisão.",
       "completing": "Concluindo...",
+      "directory": {
+        "noConversation": "Selecione uma conversa para ver seu diretório.",
+        "loading": "Carregando diretório...",
+        "empty": "Não há itens de diretório nesta conversa."
+      },
       "toasts": {
         "importedSessions": "Importadas {imported, plural, one {# sessão} other {# sessões}}, ignoradas {skipped}",
         "noNewSessionsFound": "Nenhuma nova sessão encontrada (ignoradas {skipped})",
@@ -1281,7 +1289,7 @@
         "assistantLabel": "AI",
         "toolOnly": "Tool-only response",
         "attachmentOnly": "Images/attachments",
-        "pendingReply": "Awaiting reply",
+        "pendingReply": "Sem resposta",
         "emptyPreview": "No preview available",
         "jumpToUserAria": "Jump to user message",
         "jumpToAssistantAria": "Jump to AI reply"

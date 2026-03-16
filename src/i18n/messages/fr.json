@@ -603,6 +603,9 @@
     },
     "sidebar": {
       "title": "Discussions",
+      "tabs": {
+        "directory": "Plan"
+      },
       "locateActiveConversation": "Localiser la conversation active",
       "expandAllGroups": "Développer tous les groupes",
       "collapseAllGroups": "Réduire tous les groupes",
@@ -615,6 +618,11 @@
       "completeAllReviewTitle": "Terminer toutes les sessions en revue ?",
       "completeAllReviewDescription": "Cela marquera comme terminées toutes les {count, plural, one {# session} other {# sessions}} en Revue.",
       "completing": "Finalisation...",
+      "directory": {
+        "noConversation": "Sélectionnez une conversation pour afficher son plan.",
+        "loading": "Chargement du plan...",
+        "empty": "Aucun élément de plan pour cette conversation."
+      },
       "toasts": {
         "importedSessions": "{imported, plural, one {# session} other {# sessions}} importée(s), {skipped} ignorée(s)",
         "noNewSessionsFound": "Aucune nouvelle session trouvée ({skipped} ignorée(s))",
@@ -1281,7 +1289,7 @@
         "assistantLabel": "AI",
         "toolOnly": "Tool-only response",
         "attachmentOnly": "Images/attachments",
-        "pendingReply": "Awaiting reply",
+        "pendingReply": "Sans réponse",
         "emptyPreview": "No preview available",
         "jumpToUserAria": "Jump to user message",
         "jumpToAssistantAria": "Jump to AI reply"

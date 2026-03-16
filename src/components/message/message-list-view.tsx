@@ -1,6 +1,7 @@
 "use client"
 
 import { memo, useCallback, useEffect, useMemo, useRef } from "react"
+import type { StickToBottomContext } from "use-stick-to-bottom"
 import { useConversationRuntime } from "@/contexts/conversation-runtime-context"
 import { ContentPartsRenderer } from "./content-parts-renderer"
 import {
@@ -18,7 +19,6 @@ import {
   AgentPlanOverlay,
   getLatestPlanEntries,
 } from "@/components/chat/agent-plan-overlay"
-import { SessionLocatorOverlay } from "@/components/chat/session-locator-overlay"
 import { MessageThread } from "@/components/ai-elements/message-thread"
 import { Message, MessageContent } from "@/components/ai-elements/message"
 import { Loader2 } from "lucide-react"
@@ -33,10 +33,7 @@ import {
   type VirtualizedMessageThreadHandle,
 } from "@/components/message/virtualized-message-thread"
 import { useMessageHighlight } from "@/components/message/use-message-highlight"
-import {
-  buildSessionLocatorItems,
-  type SessionLocatorRawTurn,
-} from "@/lib/session-locator"
+import { useSessionLocatorContext } from "@/contexts/session-locator-context"
 import { cn } from "@/lib/utils"
 import { useStickToBottomContext } from "use-stick-to-bottom"
 
@@ -188,10 +185,18 @@ export function MessageListView({
   const { setSessionStats } = useSessionStats()
   const rootRef = useRef<HTMLDivElement>(null)
   const threadRef = useRef<VirtualizedMessageThreadHandle | null>(null)
+  const stickToBottomContextRef = useRef<StickToBottomContext | null>(null)
+  const { registerJumpHandler } = useSessionLocatorContext()
   const { highlightedTarget, jumpToTarget } = useMessageHighlight({
     rootRef,
     threadRef,
+    stopAutoStick: () => stickToBottomContextRef.current?.stopScroll(),
   })
+
+  useEffect(
+    () => registerJumpHandler(conversationId, jumpToTarget),
+    [conversationId, jumpToTarget, registerJumpHandler]
+  )
 
   useEffect(() => {
     if (isActive) {
@@ -278,39 +283,6 @@ export function MessageListView({
     [liveMessage]
   )
 
-  const locatorRawTurns = useMemo<SessionLocatorRawTurn[]>(
-    () =>
-      threadItems.flatMap((item, threadIndex) => {
-        if (item.kind !== "turn") return []
-
-        return [
-          {
-            turnId: item.group.id,
-            role: item.group.role,
-            phase: item.phase,
-            threadIndex,
-            parts: item.group.parts,
-            resourceCount: item.group.resources.length,
-            imageCount: item.group.images.length,
-          },
-        ]
-      }),
-    [threadItems]
-  )
-
-  const sessionLocatorItems = useMemo(
-    () =>
-      buildSessionLocatorItems(
-        locatorRawTurns.filter((turn) => {
-          if (turn.role === "system") return false
-          if (turn.phase === "streaming") return false
-          if (turn.phase === "optimistic") return turn.role === "user"
-          return true
-        })
-      ),
-    [locatorRawTurns]
-  )
-
   const renderThreadItem = useCallback(
     (item: ThreadRenderItem) => {
       switch (item.kind) {
@@ -355,9 +327,7 @@ export function MessageListView({
   )
 
   const agentPlanOverlayKey = liveMessage?.id ?? `history-${conversationId}`
-  const sessionLocatorKey = `conversation-${conversationId}`
   const hasRenderableContent = threadItems.length > 0 || Boolean(liveMessage)
-  const hasSessionLocatorOverlay = sessionLocatorItems.length > 0
   const hasAgentPlanOverlay =
     livePlanEntries.length > 0 || historicalPlanEntries.length > 0
 
@@ -388,6 +358,7 @@ export function MessageListView({
     <div ref={rootRef} className="relative flex h-full min-h-0 flex-col">
       <MessageThread
         className="flex-1 min-h-0"
+        contextRef={stickToBottomContextRef}
         resize={shouldUseSmoothResize ? "smooth" : undefined}
       >
         <AutoScrollOnSend signal={sendSignal} />
@@ -408,27 +379,17 @@ export function MessageListView({
           isStreaming={connStatus === "prompting"}
         />
       )}
-      {(hasSessionLocatorOverlay || hasAgentPlanOverlay) && (
+      {hasAgentPlanOverlay && (
         <div className="pointer-events-none absolute inset-x-0 top-4 z-20 px-4 sm:px-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-            {hasSessionLocatorOverlay && (
-              <SessionLocatorOverlay
-                className="max-w-full"
-                items={sessionLocatorItems}
-                locatorKey={sessionLocatorKey}
-                onJumpToTarget={jumpToTarget}
-              />
-            )}
-            {hasAgentPlanOverlay && (
-              <AgentPlanOverlay
-                key={agentPlanOverlayKey}
-                className="max-w-full sm:ml-auto"
-                message={liveMessage ?? null}
-                entries={historicalPlanEntries}
-                planKey={historicalPlanKey}
-                defaultExpanded={connStatus === "prompting"}
-              />
-            )}
+            <AgentPlanOverlay
+              key={agentPlanOverlayKey}
+              className="max-w-full sm:ml-auto"
+              message={liveMessage ?? null}
+              entries={historicalPlanEntries}
+              planKey={historicalPlanKey}
+              defaultExpanded={connStatus === "prompting"}
+            />
           </div>
         </div>
       )}
