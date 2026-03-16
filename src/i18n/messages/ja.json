@@ -406,6 +406,10 @@
     },
     "codex": {
       "configDescription": "API URL、API Key、モデル名、reasoning effort を素早く設定でき、`auth.json` / `config.toml` と同期します。",
+      "authMode": "認証方式",
+      "chatgptSubscription": "公式サブスクリプション",
+      "chatgptSubscriptionHint": "ChatGPT 公式サブスクリプションでログイン、API Key 不要",
+      "apiKeyHint": "API Key で OpenAI または互換 API サービスに接続",
       "selectProvider": "プロバイダーを選択",
       "modelName": "モデル名",
       "selectReasoningEffort": "Reasoning Effort を選択",
@@ -806,7 +810,9 @@
         "deleteTitle": "ブランチを削除",
         "mergeDescription": "{branchName} を現在のブランチ {currentBranch} にマージしますか？",
         "rebaseDescription": "現在のブランチ {currentBranch} を {branchName} にリベースしますか？",
-        "deleteDescription": "ブランチ {branchName} を削除しますか？この操作は元に戻せません。"
+        "deleteDescription": "ブランチ {branchName} を削除しますか？この操作は元に戻せません。",
+        "forceDeleteTitle": "ブランチを強制削除",
+        "forceDeleteDescription": "ブランチ {branchName} はまだ完全にマージされていません。強制削除してもよろしいですか？この操作は元に戻せません。"
       },
       "current": "現在",
       "switchToBranch": "このブランチに切り替え",
@@ -821,7 +827,7 @@
       "pushCode": "プッシュ...",
       "newBranch": "新規ブランチ...",
       "newWorktree": "新規ワークツリー...",
-      "stashChanges": "変更を stash",
+      "stashChanges": "スタッシュ...",
       "stashPop": "stash を pop...",
       "manageRemotes": "リモート管理...",
       "localBranches": "ローカルブランチ ({count, plural, one {#} other {#}})",
@@ -853,6 +859,31 @@
         "completeMerge": "マージ完了",
         "abortSuccess": "マージが中止されました",
         "completeSuccess": "マージが完了しました"
+      },
+      "stashDialog": {
+        "title": "変更をスタッシュ",
+        "description": "現在の変更をスタッシュに保存",
+        "messageLabel": "メッセージ",
+        "messagePlaceholder": "スタッシュメッセージ（任意）",
+        "keepIndex": "インデックスを保持（ステージ済みの変更はそのまま）",
+        "cancel": "キャンセル",
+        "stash": "スタッシュ",
+        "success": "変更がスタッシュされました",
+        "error": "スタッシュに失敗しました"
+      },
+      "unstashDialog": {
+        "title": "スタッシュを適用",
+        "noStashes": "スタッシュがありません",
+        "selectFile": "ファイルを選択して差分を表示",
+        "viewDiff": "差分を表示",
+        "original": "元",
+        "modified": "変更後",
+        "apply": "適用",
+        "drop": "削除",
+        "applySuccess": "スタッシュを適用しました",
+        "dropSuccess": "スタッシュを削除しました",
+        "confirmApply": "スタッシュ {ref} を作業ディレクトリに適用しますか？",
+        "cancel": "キャンセル"
       }
     },
     "commitDialog": {
@@ -864,13 +895,17 @@
         "fileDeleted": "ファイルを削除しました",
         "deleteFailed": "削除に失敗しました",
         "fileRolledBack": "ファイルをロールバックしました",
-        "rollbackFailed": "ロールバックに失敗しました"
+        "rollbackFailed": "ロールバックに失敗しました",
+        "dirRolledBack": "ディレクトリをロールバックしました",
+        "dirDeleted": "ディレクトリを削除しました"
       },
       "confirm": {
         "deleteTitle": "削除の確認",
         "deleteDescription": "ファイル \"{file}\" を削除しますか？この操作は元に戻せません。",
         "rollbackTitle": "ロールバックの確認",
-        "rollbackDescription": "ファイル \"{file}\" を HEAD にロールバックしますか？未保存の変更は失われます。"
+        "rollbackDescription": "ファイル \"{file}\" を HEAD にロールバックしますか？未保存の変更は失われます。",
+        "rollbackDirDescription": "ディレクトリ「{dir}」をHEADにロールバックしますか？未保存の変更は失われます。",
+        "deleteDirDescription": "ディレクトリ「{dir}」を削除しますか？この操作は元に戻せません。"
       },
       "actions": {
         "select": "選択",

@@ -406,6 +406,10 @@
     },
     "codex": {
       "configDescription": "يدعم الإعداد السريع لعنوان API ومفتاح API واسم النموذج وجهد الاستدلال، مع المزامنة مع `auth.json` / `config.toml`.",
+      "authMode": "طريقة المصادقة",
+      "chatgptSubscription": "اشتراك رسمي",
+      "chatgptSubscriptionHint": "تسجيل الدخول باشتراك ChatGPT الرسمي، لا حاجة لـ API Key",
+      "apiKeyHint": "الاتصال باستخدام API Key بخدمات OpenAI أو الخدمات المتوافقة",
       "selectProvider": "اختر المزود",
       "modelName": "اسم النموذج",
       "selectReasoningEffort": "اختر Reasoning Effort",
@@ -806,7 +810,9 @@
         "deleteTitle": "حذف الفرع",
         "mergeDescription": "دمج {branchName} في الفرع الحالي {currentBranch}؟",
         "rebaseDescription": "إجراء rebase للفرع الحالي {currentBranch} على {branchName}؟",
-        "deleteDescription": "حذف الفرع {branchName}؟ لا يمكن التراجع عن هذا الإجراء."
+        "deleteDescription": "حذف الفرع {branchName}؟ لا يمكن التراجع عن هذا الإجراء.",
+        "forceDeleteTitle": "حذف الفرع بالقوة",
+        "forceDeleteDescription": "الفرع {branchName} لم يتم دمجه بالكامل. هل أنت متأكد من أنك تريد حذفه بالقوة؟ لا يمكن التراجع عن هذا الإجراء."
       },
       "current": "الحالي",
       "switchToBranch": "التبديل إلى هذا الفرع",
@@ -821,7 +827,7 @@
       "pushCode": "دفع...",
       "newBranch": "فرع جديد...",
       "newWorktree": "Worktree جديد...",
-      "stashChanges": "تخزين التغييرات في stash",
+      "stashChanges": "...تخبئة التغييرات",
       "stashPop": "استرجاع stash...",
       "manageRemotes": "إدارة المستودعات البعيدة...",
       "localBranches": "الفروع المحلية ({count, plural, one {#} other {#}})",
@@ -853,6 +859,31 @@
         "completeMerge": "إتمام الدمج",
         "abortSuccess": "تم إلغاء الدمج بنجاح",
         "completeSuccess": "تم إتمام الدمج بنجاح"
+      },
+      "stashDialog": {
+        "title": "تخبئة التغييرات",
+        "description": "حفظ التغييرات الحالية في المخبأ",
+        "messageLabel": "رسالة",
+        "messagePlaceholder": "رسالة التخبئة (اختياري)",
+        "keepIndex": "الاحتفاظ بالفهرس (التغييرات المرحلة تبقى مرحلة)",
+        "cancel": "إلغاء",
+        "stash": "تخبئة",
+        "success": "تم تخبئة التغييرات",
+        "error": "فشل في تخبئة التغييرات"
+      },
+      "unstashDialog": {
+        "title": "تطبيق المخبأ",
+        "noStashes": "لا توجد تخبئات",
+        "selectFile": "اختر ملفاً لعرض الفرق",
+        "viewDiff": "عرض الفرق",
+        "original": "الأصلي",
+        "modified": "المعدل",
+        "apply": "تطبيق",
+        "drop": "حذف",
+        "applySuccess": "تم تطبيق التخبئة",
+        "dropSuccess": "تم حذف التخبئة",
+        "confirmApply": "تطبيق التخبئة {ref} على دليل العمل؟",
+        "cancel": "إلغاء"
       }
     },
     "commitDialog": {
@@ -864,13 +895,17 @@
         "fileDeleted": "تم حذف الملف",
         "deleteFailed": "فشل الحذف",
         "fileRolledBack": "تم التراجع عن الملف",
-        "rollbackFailed": "فشل التراجع"
+        "rollbackFailed": "فشل التراجع",
+        "dirRolledBack": "تم استعادة المجلد",
+        "dirDeleted": "تم حذف المجلد"
       },
       "confirm": {
         "deleteTitle": "تأكيد الحذف",
         "deleteDescription": "حذف الملف \"{file}\"؟ لا يمكن التراجع عن هذا الإجراء.",
         "rollbackTitle": "تأكيد التراجع",
-        "rollbackDescription": "التراجع عن الملف \"{file}\" إلى HEAD؟ ستفقد التغييرات غير المحفوظة."
+        "rollbackDescription": "التراجع عن الملف \"{file}\" إلى HEAD؟ ستفقد التغييرات غير المحفوظة.",
+        "rollbackDirDescription": "هل تريد استعادة المجلد \"{dir}\" إلى HEAD؟ ستفقد التغييرات غير المحفوظة.",
+        "deleteDirDescription": "هل تريد حذف المجلد \"{dir}\"؟ لا يمكن التراجع عن هذا الإجراء."
       },
       "actions": {
         "select": "تحديد",

@@ -406,6 +406,10 @@
     },
     "codex": {
       "configDescription": "Admite configuración rápida de URL de API, API Key, nombre del modelo y reasoning effort, y sincroniza con `auth.json` / `config.toml`.",
+      "authMode": "Modo de Autenticación",
+      "chatgptSubscription": "Suscripción oficial",
+      "chatgptSubscriptionHint": "Iniciar sesión con suscripción oficial de ChatGPT, sin necesidad de API Key",
+      "apiKeyHint": "Conectar usando API Key a OpenAI o servicios API compatibles",
       "selectProvider": "Seleccionar proveedor",
       "modelName": "Nombre del modelo",
       "selectReasoningEffort": "Seleccionar Reasoning Effort",
@@ -806,7 +810,9 @@
         "deleteTitle": "Eliminar rama",
         "mergeDescription": "¿Fusionar {branchName} en la rama actual {currentBranch}?",
         "rebaseDescription": "¿Hacer rebase de la rama actual {currentBranch} sobre {branchName}?",
-        "deleteDescription": "¿Eliminar la rama {branchName}? Esta acción no se puede deshacer."
+        "deleteDescription": "¿Eliminar la rama {branchName}? Esta acción no se puede deshacer.",
+        "forceDeleteTitle": "Forzar eliminación de rama",
+        "forceDeleteDescription": "La rama {branchName} no está completamente fusionada. ¿Estás seguro de que quieres forzar su eliminación? Esta acción no se puede deshacer."
       },
       "current": "Actual",
       "switchToBranch": "Cambiar a esta rama",
@@ -821,7 +827,7 @@
       "pushCode": "Enviar...",
       "newBranch": "Nueva rama...",
       "newWorktree": "Nuevo worktree...",
-      "stashChanges": "Guardar cambios en stash",
+      "stashChanges": "Guardar cambios...",
       "stashPop": "Aplicar stash...",
       "manageRemotes": "Gestionar remotos...",
       "localBranches": "Ramas locales ({count, plural, one {#} other {#}})",
@@ -853,6 +859,31 @@
         "completeMerge": "Completar fusión",
         "abortSuccess": "Fusión abortada correctamente",
         "completeSuccess": "Fusión completada correctamente"
+      },
+      "stashDialog": {
+        "title": "Guardar cambios en stash",
+        "description": "Guardar los cambios actuales en el stash",
+        "messageLabel": "Mensaje",
+        "messagePlaceholder": "Mensaje del stash (opcional)",
+        "keepIndex": "Mantener índice (los cambios preparados permanecen preparados)",
+        "cancel": "Cancelar",
+        "stash": "Guardar",
+        "success": "Cambios guardados en stash",
+        "error": "Error al guardar en stash"
+      },
+      "unstashDialog": {
+        "title": "Aplicar stash",
+        "noStashes": "No hay stashes",
+        "selectFile": "Selecciona un archivo para ver diferencias",
+        "viewDiff": "Ver diferencias",
+        "original": "Original",
+        "modified": "Modificado",
+        "apply": "Aplicar",
+        "drop": "Eliminar",
+        "applySuccess": "Stash aplicado",
+        "dropSuccess": "Stash eliminado",
+        "confirmApply": "¿Aplicar stash {ref} al directorio de trabajo?",
+        "cancel": "Cancelar"
       }
     },
     "commitDialog": {
@@ -864,13 +895,17 @@
         "fileDeleted": "Archivo eliminado",
         "deleteFailed": "Error al eliminar",
         "fileRolledBack": "Archivo revertido",
-        "rollbackFailed": "Error al revertir"
+        "rollbackFailed": "Error al revertir",
+        "dirRolledBack": "Directorio revertido",
+        "dirDeleted": "Directorio eliminado"
       },
       "confirm": {
         "deleteTitle": "Confirmar eliminación",
         "deleteDescription": "¿Eliminar el archivo \"{file}\"? Esta acción no se puede deshacer.",
         "rollbackTitle": "Confirmar reversión",
-        "rollbackDescription": "¿Revertir el archivo \"{file}\" a HEAD? Se perderán los cambios sin guardar."
+        "rollbackDescription": "¿Revertir el archivo \"{file}\" a HEAD? Se perderán los cambios sin guardar.",
+        "rollbackDirDescription": "¿Revertir el directorio \"{dir}\" a HEAD? Los cambios no guardados se perderán.",
+        "deleteDirDescription": "¿Eliminar el directorio \"{dir}\"? Esta acción no se puede deshacer."
       },
       "actions": {
         "select": "Seleccionar",

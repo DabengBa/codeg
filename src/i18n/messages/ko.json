@@ -406,6 +406,10 @@
     },
     "codex": {
       "configDescription": "API URL, API Key, 모델 이름, reasoning effort를 빠르게 설정하고 `auth.json` / `config.toml`과 동기화합니다.",
+      "authMode": "인증 방식",
+      "chatgptSubscription": "공식 구독",
+      "chatgptSubscriptionHint": "ChatGPT 공식 구독으로 로그인, API Key 불필요",
+      "apiKeyHint": "API Key로 OpenAI 또는 호환 API 서비스에 연결",
       "selectProvider": "Provider 선택",
       "modelName": "모델 이름",
       "selectReasoningEffort": "Reasoning Effort 선택",
@@ -806,7 +810,9 @@
         "deleteTitle": "브랜치 삭제",
         "mergeDescription": "{branchName}을(를) 현재 브랜치 {currentBranch}에 병합할까요?",
         "rebaseDescription": "현재 브랜치 {currentBranch}를 {branchName} 위로 리베이스할까요?",
-        "deleteDescription": "브랜치 {branchName}을(를) 삭제할까요? 이 작업은 되돌릴 수 없습니다."
+        "deleteDescription": "브랜치 {branchName}을(를) 삭제할까요? 이 작업은 되돌릴 수 없습니다.",
+        "forceDeleteTitle": "브랜치 강제 삭제",
+        "forceDeleteDescription": "브랜치 {branchName}가 완전히 병합되지 않았습니다. 강제 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
       },
       "current": "현재",
       "switchToBranch": "이 브랜치로 전환",
@@ -821,7 +827,7 @@
       "pushCode": "푸시...",
       "newBranch": "새 브랜치...",
       "newWorktree": "새 워크트리...",
-      "stashChanges": "변경 사항 stash",
+      "stashChanges": "스태시...",
       "stashPop": "stash pop...",
       "manageRemotes": "원격 관리...",
       "localBranches": "로컬 브랜치 ({count, plural, one {#} other {#}})",
@@ -853,6 +859,31 @@
         "completeMerge": "병합 완료",
         "abortSuccess": "병합이 중단되었습니다",
         "completeSuccess": "병합이 완료되었습니다"
+      },
+      "stashDialog": {
+        "title": "변경 사항 스태시",
+        "description": "현재 변경 사항을 스태시에 저장",
+        "messageLabel": "메시지",
+        "messagePlaceholder": "스태시 메시지 (선택사항)",
+        "keepIndex": "인덱스 유지 (스테이지된 변경 사항 유지)",
+        "cancel": "취소",
+        "stash": "스태시",
+        "success": "변경 사항이 스태시되었습니다",
+        "error": "스태시 실패"
+      },
+      "unstashDialog": {
+        "title": "스태시 적용",
+        "noStashes": "스태시가 없습니다",
+        "selectFile": "파일을 선택하여 차이 보기",
+        "viewDiff": "차이 보기",
+        "original": "원본",
+        "modified": "수정됨",
+        "apply": "적용",
+        "drop": "삭제",
+        "applySuccess": "스태시가 적용되었습니다",
+        "dropSuccess": "스태시가 삭제되었습니다",
+        "confirmApply": "스태시 {ref}을(를) 작업 디렉토리에 적용하시겠습니까?",
+        "cancel": "취소"
       }
     },
     "commitDialog": {
@@ -864,13 +895,17 @@
         "fileDeleted": "파일이 삭제되었습니다",
         "deleteFailed": "삭제에 실패했습니다",
         "fileRolledBack": "파일이 롤백되었습니다",
-        "rollbackFailed": "롤백에 실패했습니다"
+        "rollbackFailed": "롤백에 실패했습니다",
+        "dirRolledBack": "디렉토리가 롤백되었습니다",
+        "dirDeleted": "디렉토리가 삭제되었습니다"
       },
       "confirm": {
         "deleteTitle": "삭제 확인",
         "deleteDescription": "파일 \"{file}\"을(를) 삭제할까요? 이 작업은 되돌릴 수 없습니다.",
         "rollbackTitle": "롤백 확인",
-        "rollbackDescription": "파일 \"{file}\"을(를) HEAD로 롤백할까요? 저장되지 않은 변경 사항은 사라집니다."
+        "rollbackDescription": "파일 \"{file}\"을(를) HEAD로 롤백할까요? 저장되지 않은 변경 사항은 사라집니다.",
+        "rollbackDirDescription": "디렉토리 \"{dir}\"를 HEAD로 롤백하시겠습니까? 저장되지 않은 변경 사항이 손실됩니다.",
+        "deleteDirDescription": "디렉토리 \"{dir}\"를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
       },
       "actions": {
         "select": "선택",

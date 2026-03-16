@@ -406,6 +406,10 @@
     },
     "codex": {
       "configDescription": "Supports quick configuration for API URL, API Key, model name and reasoning effort, and syncs with `auth.json` / `config.toml`.",
+      "authMode": "Auth Mode",
+      "chatgptSubscription": "Official Subscription",
+      "chatgptSubscriptionHint": "Log in with ChatGPT official subscription, no API Key required",
+      "apiKeyHint": "Connect using API Key to OpenAI or compatible API services",
       "selectProvider": "Select Provider",
       "modelName": "Model Name",
       "selectReasoningEffort": "Select Reasoning Effort",
@@ -806,7 +810,9 @@
         "deleteTitle": "Delete branch",
         "mergeDescription": "Merge {branchName} into current branch {currentBranch}?",
         "rebaseDescription": "Rebase current branch {currentBranch} onto {branchName}?",
-        "deleteDescription": "Delete branch {branchName}? This action cannot be undone."
+        "deleteDescription": "Delete branch {branchName}? This action cannot be undone.",
+        "forceDeleteTitle": "Force Delete Branch",
+        "forceDeleteDescription": "Branch {branchName} is not fully merged. Are you sure you want to force delete it? This action cannot be undone."
       },
       "current": "Current",
       "switchToBranch": "Switch to this branch",
@@ -821,8 +827,8 @@
       "pushCode": "Push...",
       "newBranch": "New branch...",
       "newWorktree": "New worktree...",
-      "stashChanges": "Stash changes",
-      "stashPop": "Pop stash...",
+      "stashChanges": "Stash changes...",
+      "stashPop": "Unstash...",
       "manageRemotes": "Manage Remotes...",
       "localBranches": "Local branches ({count, plural, one {#} other {#}})",
       "noLocalBranches": "No local branches",
@@ -853,6 +859,31 @@
         "completeMerge": "Complete Merge",
         "abortSuccess": "Merge aborted successfully",
         "completeSuccess": "Merge completed successfully"
+      },
+      "stashDialog": {
+        "title": "Stash Changes",
+        "description": "Save your current changes to a stash",
+        "messageLabel": "Message",
+        "messagePlaceholder": "Stash message (optional)",
+        "keepIndex": "Keep index (staged changes remain staged)",
+        "cancel": "Cancel",
+        "stash": "Stash",
+        "success": "Changes stashed successfully",
+        "error": "Failed to stash changes"
+      },
+      "unstashDialog": {
+        "title": "Unstash Changes",
+        "noStashes": "No stashes found",
+        "selectFile": "Select a file to view diff",
+        "viewDiff": "View Diff",
+        "original": "Original",
+        "modified": "Modified",
+        "apply": "Apply",
+        "drop": "Drop",
+        "applySuccess": "Stash applied successfully",
+        "dropSuccess": "Stash dropped",
+        "confirmApply": "Apply stash {ref} to working directory?",
+        "cancel": "Cancel"
       }
     },
     "commitDialog": {
@@ -864,13 +895,17 @@
         "fileDeleted": "File deleted",
         "deleteFailed": "Delete failed",
         "fileRolledBack": "File rolled back",
-        "rollbackFailed": "Rollback failed"
+        "rollbackFailed": "Rollback failed",
+        "dirRolledBack": "Directory rolled back",
+        "dirDeleted": "Directory deleted"
       },
       "confirm": {
         "deleteTitle": "Confirm deletion",
         "deleteDescription": "Delete file \"{file}\"? This action cannot be undone.",
         "rollbackTitle": "Confirm rollback",
-        "rollbackDescription": "Rollback file \"{file}\" to HEAD? Unsaved changes will be lost."
+        "rollbackDescription": "Rollback file \"{file}\" to HEAD? Unsaved changes will be lost.",
+        "rollbackDirDescription": "Rollback directory \"{dir}\" to HEAD? Unsaved changes will be lost.",
+        "deleteDirDescription": "Delete directory \"{dir}\"? This action cannot be undone."
       },
       "actions": {
         "select": "Select",

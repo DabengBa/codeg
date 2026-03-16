@@ -1,12 +1,13 @@
 {
   "name": "codeg",
   "private": true,
-  "version": "0.1.6",
+  "version": "0.1.10",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "lint": "eslint",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "postinstall": "node -e \"const fs=require('fs');fs.cpSync('node_modules/monaco-editor/min/vs','public/vs',{recursive:true,force:true})\""
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",

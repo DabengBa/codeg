@@ -489,7 +489,7 @@ function RenderNode({
 
     return (
       <ContextMenu>
-        <ContextMenuTrigger asChild>
+        <ContextMenuTrigger>
           <FileTreeFile
             path={node.path}
             name={node.name}
@@ -614,7 +614,7 @@ function RenderNode({
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger asChild>
+      <ContextMenuTrigger>
         <FileTreeFolder
           path={node.path}
           name={node.name}
@@ -1102,14 +1102,31 @@ export function FileTreeTab() {
           const result = await readFilePreview(folder.path, gitignoreNode.path)
           const matcher = ignore().add(result.content)
 
-          for (const child of children) {
+          // Collect all descendant nodes so multi-level patterns like
+          // "public/vs" can be matched using relative paths.
+          const descendants: FileTreeNode[] = []
+          const collectDescendants = (parent: string) => {
+            const items = dirChildrenByPath.get(parent)
+            if (!items) return
+            for (const item of items) {
+              descendants.push(item)
+              if (item.kind === "dir") collectDescendants(item.path)
+            }
+          }
+          collectDescendants(dirPath)
+
+          for (const desc of descendants) {
+            if (hasIgnoredAncestor(desc.path, nextIgnoredPaths)) continue
+            const relativePath =
+              dirPath === "" ? desc.path : desc.path.slice(dirPath.length + 1)
+            if (!relativePath) continue
             const ignored =
-              child.kind === "dir"
-                ? matcher.ignores(`${child.name}/`) ||
-                  matcher.ignores(`${child.name}/.codeg-ignore-probe`)
-                : matcher.ignores(child.name)
+              desc.kind === "dir"
+                ? matcher.ignores(`${relativePath}/`) ||
+                  matcher.ignores(`${relativePath}/.codeg-ignore-probe`)
+                : matcher.ignores(relativePath)
             if (ignored) {
-              nextIgnoredPaths.add(child.path)
+              nextIgnoredPaths.add(desc.path)
             }
           }
         } catch {
@@ -2111,7 +2128,7 @@ export function FileTreeTab() {
             >
               {folder?.path && (
                 <ContextMenu>
-                  <ContextMenuTrigger asChild>
+                  <ContextMenuTrigger>
                     <FileTreeFolder
                       path={FILE_TREE_ROOT_PATH}
                       name={rootNodeName}
@@ -2282,7 +2299,13 @@ export function FileTreeTab() {
           setCreateName("")
         }}
       >
-        <DialogContent>
+        <DialogContent
+          onOpenAutoFocus={(e) => {
+            e.preventDefault()
+            const input = (e.currentTarget as HTMLElement | null)?.querySelector("input")
+            if (input) requestAnimationFrame(() => input.focus())
+          }}
+        >
           <DialogHeader>
             <DialogTitle>
               {createKind === "dir"
@@ -2308,7 +2331,6 @@ export function FileTreeTab() {
             <Input
               value={createName}
               onChange={(event) => setCreateName(event.target.value)}
-              autoFocus
               disabled={creating}
               placeholder={
                 createKind === "dir"
@@ -2344,7 +2366,13 @@ export function FileTreeTab() {
           setRenameValue("")
         }}
       >
-        <DialogContent>
+        <DialogContent
+          onOpenAutoFocus={(e) => {
+            e.preventDefault()
+            const input = (e.currentTarget as HTMLElement | null)?.querySelector("input")
+            if (input) requestAnimationFrame(() => input.focus())
+          }}
+        >
           <DialogHeader>
             <DialogTitle>
               {renameTarget?.kind === "dir"
@@ -2365,7 +2393,6 @@ export function FileTreeTab() {
             <Input
               value={renameValue}
               onChange={(event) => setRenameValue(event.target.value)}
-              autoFocus
               disabled={renaming}
               placeholder={
                 renameTarget?.kind === "dir"

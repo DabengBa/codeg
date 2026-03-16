@@ -406,6 +406,10 @@
     },
     "codex": {
       "configDescription": "Prend en charge la configuration rapide de l’URL API, de la clé API, du nom du modèle et du reasoning effort, avec synchronisation vers `auth.json` / `config.toml`.",
+      "authMode": "Mode d’authentification",
+      "chatgptSubscription": "Abonnement officiel",
+      "chatgptSubscriptionHint": "Connectez-vous avec l’abonnement officiel ChatGPT, pas besoin d’API Key",
+      "apiKeyHint": "Connectez-vous avec une API Key à OpenAI ou aux services API compatibles",
       "selectProvider": "Sélectionner un provider",
       "modelName": "Nom du modèle",
       "selectReasoningEffort": "Sélectionner Reasoning Effort",
@@ -806,7 +810,9 @@
         "deleteTitle": "Supprimer la branche",
         "mergeDescription": "Fusionner {branchName} dans la branche actuelle {currentBranch} ?",
         "rebaseDescription": "Rebaser la branche actuelle {currentBranch} sur {branchName} ?",
-        "deleteDescription": "Supprimer la branche {branchName} ? Cette action est irréversible."
+        "deleteDescription": "Supprimer la branche {branchName} ? Cette action est irréversible.",
+        "forceDeleteTitle": "Forcer la suppression de la branche",
+        "forceDeleteDescription": "La branche {branchName} n'est pas entièrement fusionnée. Êtes-vous sûr de vouloir la supprimer de force ? Cette action est irréversible."
       },
       "current": "Actuelle",
       "switchToBranch": "Basculer vers cette branche",
@@ -821,7 +827,7 @@
       "pushCode": "Pousser...",
       "newBranch": "Nouvelle branche...",
       "newWorktree": "Nouveau worktree...",
-      "stashChanges": "Stash des changements",
+      "stashChanges": "Remiser les changements...",
       "stashPop": "Appliquer le stash...",
       "manageRemotes": "Gérer les dépôts distants...",
       "localBranches": "Branches locales ({count, plural, one {#} other {#}})",
@@ -853,6 +859,31 @@
         "completeMerge": "Terminer la fusion",
         "abortSuccess": "Fusion abandonnée avec succès",
         "completeSuccess": "Fusion terminée avec succès"
+      },
+      "stashDialog": {
+        "title": "Remiser les changements",
+        "description": "Sauvegarder les changements actuels dans la remise",
+        "messageLabel": "Message",
+        "messagePlaceholder": "Message de remise (optionnel)",
+        "keepIndex": "Conserver l'index (les changements indexés restent indexés)",
+        "cancel": "Annuler",
+        "stash": "Remiser",
+        "success": "Changements remisés",
+        "error": "Échec de la remise"
+      },
+      "unstashDialog": {
+        "title": "Appliquer la remise",
+        "noStashes": "Aucune remise trouvée",
+        "selectFile": "Sélectionner un fichier pour voir le diff",
+        "viewDiff": "Voir le diff",
+        "original": "Original",
+        "modified": "Modifié",
+        "apply": "Appliquer",
+        "drop": "Supprimer",
+        "applySuccess": "Remise appliquée",
+        "dropSuccess": "Remise supprimée",
+        "confirmApply": "Appliquer la remise {ref} au répertoire de travail ?",
+        "cancel": "Annuler"
       }
     },
     "commitDialog": {
@@ -864,13 +895,17 @@
         "fileDeleted": "Fichier supprimé",
         "deleteFailed": "Échec de la suppression",
         "fileRolledBack": "Fichier restauré",
-        "rollbackFailed": "Échec du rollback"
+        "rollbackFailed": "Échec du rollback",
+        "dirRolledBack": "Répertoire restauré",
+        "dirDeleted": "Répertoire supprimé"
       },
       "confirm": {
         "deleteTitle": "Confirmer la suppression",
         "deleteDescription": "Supprimer le fichier \"{file}\" ? Cette action est irréversible.",
         "rollbackTitle": "Confirmer le rollback",
-        "rollbackDescription": "Restaurer le fichier \"{file}\" vers HEAD ? Les modifications non enregistrées seront perdues."
+        "rollbackDescription": "Restaurer le fichier \"{file}\" vers HEAD ? Les modifications non enregistrées seront perdues.",
+        "rollbackDirDescription": "Restaurer le répertoire \"{dir}\" vers HEAD ? Les modifications non enregistrées seront perdues.",
+        "deleteDirDescription": "Supprimer le répertoire \"{dir}\" ? Cette action est irréversible."
       },
       "actions": {
         "select": "Sélectionner",

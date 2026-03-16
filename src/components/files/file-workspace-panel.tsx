@@ -15,6 +15,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import { defineMonacoThemes, useMonacoThemeSync } from "@/lib/monaco-themes"
+import "@/lib/monaco-local"
 
 const AUTO_SAVE_DELAY_MS = 5000
 

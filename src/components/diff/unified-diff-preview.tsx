@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl"
 import { useFolderContext } from "@/contexts/folder-context"
 import { defineMonacoThemes, useMonacoThemeSync } from "@/lib/monaco-themes"
 import { cn } from "@/lib/utils"
+import "@/lib/monaco-local"
 
 type RowMarker = "none" | "added" | "deleted" | "modified"
 type DiffFileMode = "modified" | "added" | "deleted" | "renamed"
