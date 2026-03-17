@@ -618,11 +618,6 @@
       "completeAllReviewTitle": "모든 검토 세션을 완료 처리할까요?",
       "completeAllReviewDescription": "검토 상태의 {count, plural, one {#개 세션} other {#개 세션}}을 모두 완료로 표시합니다.",
       "completing": "완료 처리 중...",
-      "directory": {
-        "noConversation": "목차를 보려면 대화를 선택하세요.",
-        "loading": "목차를 불러오는 중...",
-        "empty": "이 대화에는 목차 항목이 없습니다."
-      },
       "toasts": {
         "importedSessions": "{imported, plural, one {#개 세션} other {#개 세션}}을 가져오고 {skipped}개를 건너뛰었습니다",
         "noNewSessionsFound": "새 세션이 없습니다 ({skipped}개 건너뜀)",
@@ -1282,11 +1277,9 @@
         }
       },
       "messageNavigator": {
-        "title": "세션 위치",
-        "collapseAria": "세션 위치 접기",
-        "collapsedSummary": "위치 {count}",
-        "userLabel": "사용자",
-        "assistantLabel": "AI",
+        "title": "메시지 내비게이터",
+        "collapseAria": "메시지 내비게이터 접기",
+        "collapsedSummary": "내비게이터 {count}",
         "toolOnly": "도구 출력만",
         "attachmentOnly": "이미지/첨부파일",
         "pendingReply": "응답 없음",

@@ -618,11 +618,6 @@
       "completeAllReviewTitle": "完成全部复查会话？",
       "completeAllReviewDescription": "这会将复查中的 {count} 个会话全部标记为已完成。",
       "completing": "处理中...",
-      "directory": {
-        "noConversation": "选择会话后显示目录",
-        "loading": "加载目录中...",
-        "empty": "当前会话暂无目录项"
-      },
       "toasts": {
         "importedSessions": "已导入 {imported} 个会话，跳过 {skipped} 个",
         "noNewSessionsFound": "没有新会话（已跳过 {skipped} 个）",
@@ -1285,8 +1280,6 @@
         "title": "消息导航",
         "collapseAria": "折叠消息导航",
         "collapsedSummary": "导航 {count}",
-        "userLabel": "用户",
-        "assistantLabel": "AI",
         "toolOnly": "仅工具调用",
         "attachmentOnly": "图片/附件",
         "pendingReply": "无回复",

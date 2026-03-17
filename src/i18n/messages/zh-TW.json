@@ -618,11 +618,6 @@
       "completeAllReviewTitle": "完成全部複查會話？",
       "completeAllReviewDescription": "這會將複查中的 {count} 個會話全部標記為已完成。",
       "completing": "處理中...",
-      "directory": {
-        "noConversation": "選擇會話後顯示目錄",
-        "loading": "載入目錄中...",
-        "empty": "目前會話暫無目錄項"
-      },
       "toasts": {
         "importedSessions": "已匯入 {imported} 個會話，跳過 {skipped} 個",
         "noNewSessionsFound": "沒有新會話（已跳過 {skipped} 個）",
@@ -1285,8 +1280,6 @@
         "title": "訊息導航",
         "collapseAria": "摺疊訊息導航",
         "collapsedSummary": "導航 {count}",
-        "userLabel": "使用者",
-        "assistantLabel": "AI",
         "toolOnly": "僅工具呼叫",
         "attachmentOnly": "圖片/附件",
         "pendingReply": "無回覆",

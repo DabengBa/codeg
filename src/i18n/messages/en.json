@@ -618,11 +618,6 @@
       "completeAllReviewTitle": "Complete all review sessions?",
       "completeAllReviewDescription": "This will mark all {count, plural, one {# session} other {# sessions}} in Review as completed.",
       "completing": "Completing...",
-      "directory": {
-        "noConversation": "Select a conversation to view its directory.",
-        "loading": "Loading directory...",
-        "empty": "No directory items in this conversation."
-      },
       "toasts": {
         "importedSessions": "Imported {imported, plural, one {# session} other {# sessions}}, skipped {skipped}",
         "noNewSessionsFound": "No new sessions found (skipped {skipped})",
@@ -1285,8 +1280,6 @@
         "title": "Message Navigator",
         "collapseAria": "Collapse message navigator",
         "collapsedSummary": "Navigator {count}",
-        "userLabel": "User",
-        "assistantLabel": "AI",
         "toolOnly": "Tool-only response",
         "attachmentOnly": "Images/attachments",
         "pendingReply": "No reply",
