@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useImperativeHandle } from "react"
-import type { ReactNode, Ref } from "react"
+import type { CSSProperties, ReactNode, Ref } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useStickToBottomContext } from "use-stick-to-bottom"
 import {
@@ -29,6 +29,7 @@ interface VirtualizedMessageThreadProps<T> {
   estimateSize?: number
   overscan?: number
   className?: string
+  rowContainerStyle?: CSSProperties
   contentClassName?: string
   contentProps?: Omit<MessageThreadContentProps, "children" | "className">
   ref?: Ref<VirtualizedMessageThreadHandle>
@@ -42,6 +43,7 @@ export function VirtualizedMessageThread<T>({
   estimateSize = 160,
   overscan = 8,
   className,
+  rowContainerStyle,
   contentClassName,
   contentProps,
   ref,
@@ -94,13 +96,16 @@ export function VirtualizedMessageThread<T>({
             willChange: "transform",
           }}
         >
-          <div className={cn("mx-auto max-w-3xl px-4", className)}>
+          <div
+            className={cn("mx-auto max-w-3xl px-4", className)}
+            style={rowContainerStyle}
+          >
             {renderItem(item, virtualItem.index)}
           </div>
         </div>
       )
     },
-    [className, items, renderItem, virtualizer]
+    [className, items, renderItem, rowContainerStyle, virtualizer]
   )
 
   return (
