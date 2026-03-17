@@ -594,7 +594,7 @@ export function MessageListView({
           isStreaming={connStatus === "prompting"}
         />
       )}
-      {(hasAgentPlanOverlay || showMessageNavigator) && (
+      {(hasAgentPlanOverlay || sessionLocatorItems.length > 0) && (
         <div className="pointer-events-none absolute inset-x-0 top-4 bottom-4 z-20 px-4 sm:px-8">
           <div className="flex h-full min-h-0 flex-col items-end gap-3">
             {hasAgentPlanOverlay && (
@@ -609,12 +609,12 @@ export function MessageListView({
                 panelMaxHeightPx={planPanelMaxHeightPx}
               />
             )}
-            {showMessageNavigator && (
+            {sessionLocatorItems.length > 0 && (
               <MessageNavigatorOverlay
-                key={`navigator-${conversationId}-${expandMessageNavigatorByDefault ? "expanded" : "collapsed"}`}
                 className="max-w-full"
                 items={sessionLocatorItems}
                 locatorKey={`conversation-${conversationId}`}
+                visible={showMessageNavigator}
                 onJumpToTarget={jumpToTarget}
                 defaultExpanded={expandMessageNavigatorByDefault}
                 panelWidthPx={overlayPanelWidthPx}

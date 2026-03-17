@@ -1,13 +1,7 @@
 "use client"
 
 import { useCallback, useRef } from "react"
-import {
-  ChevronsDownUp,
-  ChevronsUpDown,
-  Crosshair,
-  MessageSquareText,
-  Plus,
-} from "lucide-react"
+import { ChevronsDownUp, ChevronsUpDown, Crosshair, Plus } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useFolderContext } from "@/contexts/folder-context"
 import { useTabContext } from "@/contexts/tab-context"
@@ -34,17 +28,13 @@ export function Sidebar() {
 
   return (
     <aside className="group/sidebar flex h-full min-h-0 flex-col overflow-hidden bg-sidebar text-sidebar-foreground select-none">
-      <div className="flex h-10 items-center justify-between border-b border-border px-2.5">
-        <div className="flex h-full items-center gap-1.5 px-2.5 text-[12px] font-medium text-foreground">
-          <MessageSquareText className="h-3.5 w-3.5" />
-          {t("title")}
-        </div>
-
-        <div className="flex items-center gap-0.5 opacity-60 transition-opacity group-hover/sidebar:opacity-100">
+      <div className="flex h-10 items-center justify-between border-b border-border px-4">
+        <h2 className="text-xs font-bold">{t("title")}</h2>
+        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/sidebar:opacity-100">
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 shrink-0 rounded-md text-muted-foreground"
+            className="h-6 w-6 shrink-0 text-muted-foreground"
             onClick={() => listRef.current?.scrollToActive()}
             title={t("locateActiveConversation")}
           >
@@ -53,7 +43,7 @@ export function Sidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 shrink-0 rounded-md text-muted-foreground"
+            className="h-6 w-6 shrink-0 text-muted-foreground"
             onClick={() => listRef.current?.expandAll()}
             title={t("expandAllGroups")}
           >
@@ -62,7 +52,7 @@ export function Sidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 shrink-0 rounded-md text-muted-foreground"
+            className="h-6 w-6 shrink-0 text-muted-foreground"
             onClick={() => listRef.current?.collapseAll()}
             title={t("collapseAllGroups")}
           >
@@ -71,7 +61,7 @@ export function Sidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 shrink-0 rounded-md text-muted-foreground"
+            className="h-6 w-6 shrink-0 text-muted-foreground"
             onClick={handleNewConversation}
             title={t("newConversation")}
           >
@@ -80,9 +70,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <SidebarConversationList ref={listRef} />
-      </div>
+      <SidebarConversationList ref={listRef} />
     </aside>
   )
 }

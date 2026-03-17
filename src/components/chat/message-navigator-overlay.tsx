@@ -131,20 +131,23 @@ export const MessageNavigatorOverlay = memo(function MessageNavigatorOverlay({
   const [collapsedByLocatorKey, setCollapsedByLocatorKey] = useState<
     Record<string, boolean>
   >({})
+  const hasStoredCollapsedState = Object.prototype.hasOwnProperty.call(
+    collapsedByLocatorKey,
+    currentLocatorStateKey
+  )
+
   const panelStyle: CSSProperties | undefined = panelWidthPx
     ? {
         width: `${panelWidthPx}px`,
         maxWidth: "100%",
-        ...(panelMaxHeightPx
-          ? { maxHeight: `${panelMaxHeightPx}px` }
-          : null),
+        ...(panelMaxHeightPx ? { maxHeight: `${panelMaxHeightPx}px` } : null),
       }
     : panelMaxHeightPx
       ? { maxHeight: `${panelMaxHeightPx}px` }
       : undefined
-  const isExpanded = !(
-    collapsedByLocatorKey[currentLocatorStateKey] ?? !defaultExpanded
-  )
+  const isExpanded = hasStoredCollapsedState
+    ? !collapsedByLocatorKey[currentLocatorStateKey]
+    : defaultExpanded
 
   if (!hasItems) {
     return null
@@ -177,7 +180,10 @@ export const MessageNavigatorOverlay = memo(function MessageNavigatorOverlay({
 
   return (
     <div
-      className={cn("pointer-events-auto flex min-h-0 max-h-full min-w-0", className)}
+      className={cn(
+        "pointer-events-auto flex min-h-0 max-h-full min-w-0",
+        className
+      )}
       style={panelStyle}
       data-locator-key={currentLocatorKey ?? undefined}
     >
@@ -214,9 +220,6 @@ export const MessageNavigatorOverlay = memo(function MessageNavigatorOverlay({
           {items.map((item) => {
             const userPreview = getPreviewText(item.user.preview, t)
             const assistantTarget = item.assistant
-            const assistantPreview = assistantTarget
-              ? getPreviewText(assistantTarget.preview, t)
-              : t("pendingReply")
 
             return (
               <div
@@ -229,17 +232,14 @@ export const MessageNavigatorOverlay = memo(function MessageNavigatorOverlay({
                   ariaLabel={t("jumpToUserAria")}
                   onClick={() => onJumpToTarget(item.user)}
                 />
-                <NavigatorRow
-                  role="assistant"
-                  preview={assistantPreview}
-                  ariaLabel={t("jumpToAssistantAria")}
-                  onClick={
-                    assistantTarget
-                      ? () => onJumpToTarget(assistantTarget)
-                      : undefined
-                  }
-                  disabled={!assistantTarget}
-                />
+                {assistantTarget ? (
+                  <NavigatorRow
+                    role="assistant"
+                    preview={getPreviewText(assistantTarget.preview, t)}
+                    ariaLabel={t("jumpToAssistantAria")}
+                    onClick={() => onJumpToTarget(assistantTarget)}
+                  />
+                ) : null}
               </div>
             )
           })}
