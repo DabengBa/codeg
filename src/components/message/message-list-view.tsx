@@ -51,6 +51,8 @@ const MESSAGE_NAVIGATOR_EXPANDED_THRESHOLD_PX =
 const OVERLAY_PANEL_MIN_WIDTH_PX = 288
 const OVERLAY_PANEL_MAX_WIDTH_PX = 448
 const OVERLAY_PANEL_GUTTER_PADDING_PX = 24
+const OVERLAY_STACK_VERTICAL_PADDING_PX = 32
+const OVERLAY_STACK_GAP_PX = 12
 
 interface MessageListViewProps {
   conversationId: number
@@ -201,7 +203,7 @@ export function MessageListView({
   const rootRef = useRef<HTMLDivElement>(null)
   const threadRef = useRef<VirtualizedMessageThreadHandle | null>(null)
   const stickToBottomContextRef = useRef<StickToBottomContext | null>(null)
-  const [containerWidth, setContainerWidth] = useState(0)
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const { isTileMode } = useTabContext()
   const { registerJumpHandler } = useSessionLocatorContext()
   const sessionLocatorItems = useSessionLocatorItems(conversationId)
@@ -220,16 +222,29 @@ export function MessageListView({
     const container = rootRef.current
     if (!container) return
 
-    const updateWidth = (nextWidth: number) => {
-      setContainerWidth((prev) =>
-        Math.abs(prev - nextWidth) < 1 ? prev : nextWidth
-      )
+    const updateSize = (nextWidth: number, nextHeight: number) => {
+      setContainerSize((prev) => {
+        if (
+          Math.abs(prev.width - nextWidth) < 1 &&
+          Math.abs(prev.height - nextHeight) < 1
+        ) {
+          return prev
+        }
+
+        return {
+          width: nextWidth,
+          height: nextHeight,
+        }
+      })
     }
 
-    updateWidth(container.clientWidth)
+    updateSize(container.clientWidth, container.clientHeight)
 
     const observer = new ResizeObserver((entries) => {
-      updateWidth(entries[0]?.contentRect.width ?? container.clientWidth)
+      updateSize(
+        entries[0]?.contentRect.width ?? container.clientWidth,
+        entries[0]?.contentRect.height ?? container.clientHeight
+      )
     })
 
     observer.observe(container)
@@ -370,6 +385,8 @@ export function MessageListView({
   const hasRenderableContent = threadItems.length > 0 || Boolean(liveMessage)
   const hasAgentPlanOverlay =
     livePlanEntries.length > 0 || historicalPlanEntries.length > 0
+  const containerWidth = containerSize.width
+  const containerHeight = containerSize.height
   const overlayPanelWidthPx = useMemo(() => {
     const contentShellWidth = Math.min(
       containerWidth,
@@ -385,6 +402,14 @@ export function MessageListView({
       Math.min(OVERLAY_PANEL_MAX_WIDTH_PX, suggestedWidth)
     )
   }, [containerWidth])
+  const overlayAvailableHeightPx = useMemo(
+    () =>
+      Math.max(
+        0,
+        containerHeight - OVERLAY_STACK_VERTICAL_PADDING_PX - OVERLAY_STACK_GAP_PX
+      ),
+    [containerHeight]
+  )
   const canShowNavigatorCollapsed =
     sessionLocatorItems.length > 0 &&
     (isTileMode ||
@@ -394,6 +419,13 @@ export function MessageListView({
   const expandMessageNavigatorByDefault =
     !hasAgentPlanOverlay &&
     containerWidth >= MESSAGE_NAVIGATOR_EXPANDED_THRESHOLD_PX
+  const splitOverlayHeights = hasAgentPlanOverlay && showMessageNavigator
+  const planPanelMaxHeightPx = splitOverlayHeights
+    ? Math.floor(overlayAvailableHeightPx * 0.4)
+    : overlayAvailableHeightPx || undefined
+  const navigatorPanelMaxHeightPx = splitOverlayHeights
+    ? Math.floor(overlayAvailableHeightPx * 0.6)
+    : overlayAvailableHeightPx || undefined
 
   if (detailLoading && !hasRenderableContent) {
     return (
@@ -455,6 +487,7 @@ export function MessageListView({
                 planKey={historicalPlanKey}
                 defaultExpanded={connStatus === "prompting"}
                 panelWidthPx={overlayPanelWidthPx}
+                panelMaxHeightPx={planPanelMaxHeightPx}
               />
             )}
             {showMessageNavigator && (
@@ -466,6 +499,7 @@ export function MessageListView({
                 onJumpToTarget={jumpToTarget}
                 defaultExpanded={expandMessageNavigatorByDefault}
                 panelWidthPx={overlayPanelWidthPx}
+                panelMaxHeightPx={navigatorPanelMaxHeightPx}
               />
             )}
           </div>

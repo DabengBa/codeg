@@ -24,6 +24,7 @@ interface AgentPlanOverlayProps {
   defaultExpanded?: boolean
   className?: string
   panelWidthPx?: number
+  panelMaxHeightPx?: number
 }
 
 export function getLatestPlanEntries(message: LiveMessage | null): PlanEntryInfo[] {
@@ -110,6 +111,7 @@ export const AgentPlanOverlay = memo(function AgentPlanOverlay({
   defaultExpanded = true,
   className,
   panelWidthPx,
+  panelMaxHeightPx,
 }: AgentPlanOverlayProps) {
   const t = useTranslations("Folder.chat.agentPlanOverlay")
   const liveEntries = useMemo(
@@ -144,8 +146,13 @@ export const AgentPlanOverlay = memo(function AgentPlanOverlay({
     ? {
         width: `${panelWidthPx}px`,
         maxWidth: "100%",
+        ...(panelMaxHeightPx
+          ? { maxHeight: `${panelMaxHeightPx}px` }
+          : null),
       }
-    : undefined
+    : panelMaxHeightPx
+      ? { maxHeight: `${panelMaxHeightPx}px` }
+      : undefined
   const isExpanded = !(
     collapsedByPlanKey[currentPlanStateKey] ?? !resolvedDefaultExpanded
   )
@@ -184,11 +191,11 @@ export const AgentPlanOverlay = memo(function AgentPlanOverlay({
 
   return (
     <div
-      className={cn("pointer-events-auto flex min-w-0", className)}
+      className={cn("pointer-events-auto flex min-h-0 min-w-0 max-h-full", className)}
       style={panelStyle}
       data-plan-key={currentPlanKey ?? undefined}
     >
-      <div className="w-full max-w-full rounded-xl border bg-card/60 shadow-lg backdrop-blur transition-colors hover:bg-card/95 supports-[backdrop-filter]:bg-card/50 supports-[backdrop-filter]:hover:bg-card/85">
+      <div className="flex min-h-0 max-h-full w-full max-w-full flex-col rounded-xl border bg-card/60 shadow-lg backdrop-blur transition-colors hover:bg-card/95 supports-[backdrop-filter]:bg-card/50 supports-[backdrop-filter]:hover:bg-card/85">
         <div className="flex items-center justify-between border-b px-3 py-2">
           <div className="flex items-center gap-2 min-w-0">
             <ListTodoIcon className="h-4 w-4 text-muted-foreground" />
@@ -213,7 +220,7 @@ export const AgentPlanOverlay = memo(function AgentPlanOverlay({
           </Button>
         </div>
 
-        <div className="max-h-96 overflow-y-auto p-3 space-y-2">
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-2">
           {resolvedEntries.map((entry, index) => (
             <div
               key={`${entry.content}-${index}`}

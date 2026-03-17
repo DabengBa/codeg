@@ -10,7 +10,13 @@ import type {
   SessionLocatorTarget,
 } from "@/lib/session-locator"
 import { cn } from "@/lib/utils"
-import { ChevronRightIcon, ChevronUpIcon, MapIcon } from "lucide-react"
+import {
+  Bot,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  MapIcon,
+  User,
+} from "lucide-react"
 
 interface MessageNavigatorOverlayProps {
   items: SessionLocatorItem[]
@@ -19,6 +25,7 @@ interface MessageNavigatorOverlayProps {
   defaultExpanded?: boolean
   className?: string
   panelWidthPx?: number
+  panelMaxHeightPx?: number
   onJumpToTarget: (target: SessionLocatorTarget) => void
 }
 
@@ -41,13 +48,13 @@ function getPreviewText(
 }
 
 const NavigatorRow = memo(function NavigatorRow({
-  label,
+  role,
   preview,
   ariaLabel,
   onClick,
   disabled = false,
 }: {
-  label: string
+  role: "user" | "assistant"
   preview: string
   ariaLabel?: string
   onClick?: () => void
@@ -65,9 +72,13 @@ const NavigatorRow = memo(function NavigatorRow({
       <div className={rowClassName}>
         <Badge
           variant="outline"
-          className="mt-0.5 h-5 shrink-0 text-[10px] uppercase"
+          className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center p-0"
         >
-          {label}
+          {role === "user" ? (
+            <User className="h-3 w-3" />
+          ) : (
+            <Bot className="h-3 w-3" />
+          )}
         </Badge>
         <p className="min-w-0 flex-1 line-clamp-2 break-words text-sm leading-5 text-muted-foreground">
           {preview}
@@ -81,9 +92,13 @@ const NavigatorRow = memo(function NavigatorRow({
       {ariaLabel ? <span className="sr-only">{ariaLabel} </span> : null}
       <Badge
         variant="outline"
-        className="mt-0.5 h-5 shrink-0 text-[10px] uppercase"
+        className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center p-0"
       >
-        {label}
+        {role === "user" ? (
+          <User className="h-3 w-3" />
+        ) : (
+          <Bot className="h-3 w-3" />
+        )}
       </Badge>
       <p className="min-w-0 flex-1 line-clamp-2 break-words text-sm leading-5 text-foreground">
         {preview}
@@ -99,6 +114,7 @@ export const MessageNavigatorOverlay = memo(function MessageNavigatorOverlay({
   defaultExpanded = true,
   className,
   panelWidthPx,
+  panelMaxHeightPx,
   onJumpToTarget,
 }: MessageNavigatorOverlayProps) {
   const t = useTranslations("Folder.chat.messageNavigator")
@@ -119,8 +135,13 @@ export const MessageNavigatorOverlay = memo(function MessageNavigatorOverlay({
     ? {
         width: `${panelWidthPx}px`,
         maxWidth: "100%",
+        ...(panelMaxHeightPx
+          ? { maxHeight: `${panelMaxHeightPx}px` }
+          : null),
       }
-    : undefined
+    : panelMaxHeightPx
+      ? { maxHeight: `${panelMaxHeightPx}px` }
+      : undefined
   const isExpanded = !(
     collapsedByLocatorKey[currentLocatorStateKey] ?? !defaultExpanded
   )
@@ -203,13 +224,13 @@ export const MessageNavigatorOverlay = memo(function MessageNavigatorOverlay({
                 className="rounded-lg border bg-transparent px-1.5 py-1.5"
               >
                 <NavigatorRow
-                  label={t("userLabel")}
+                  role="user"
                   preview={userPreview}
                   ariaLabel={t("jumpToUserAria")}
                   onClick={() => onJumpToTarget(item.user)}
                 />
                 <NavigatorRow
-                  label={t("assistantLabel")}
+                  role="assistant"
                   preview={assistantPreview}
                   ariaLabel={t("jumpToAssistantAria")}
                   onClick={
