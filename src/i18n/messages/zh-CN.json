@@ -1281,10 +1281,10 @@
           "unknown": "未知"
         }
       },
-      "sessionLocatorOverlay": {
-        "title": "会话定位",
-        "collapseAria": "折叠会话定位",
-        "collapsedSummary": "定位 {count}",
+      "messageNavigator": {
+        "title": "消息导航",
+        "collapseAria": "折叠消息导航",
+        "collapsedSummary": "导航 {count}",
         "userLabel": "用户",
         "assistantLabel": "AI",
         "toolOnly": "仅工具调用",

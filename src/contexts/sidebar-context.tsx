@@ -19,17 +19,13 @@ const MIN_WIDTH = 200
 const MAX_WIDTH = 600
 const DEFAULT_IS_OPEN = true
 
-export type SidebarTab = "conversations" | "directory"
-
 interface SidebarContextValue {
   isOpen: boolean
   width: number
   minWidth: number
   maxWidth: number
-  activeTab: SidebarTab
   toggle: () => void
   setWidth: (w: number) => void
-  setActiveTab: (tab: SidebarTab) => void
 }
 
 const SidebarContext = createContext<SidebarContextValue | null>(null)
@@ -58,7 +54,6 @@ export function SidebarProvider({ children, folderId }: SidebarProviderProps) {
   )
   const [isOpen, setIsOpen] = useState(DEFAULT_IS_OPEN)
   const [width, setWidthState] = useState(DEFAULT_WIDTH)
-  const [activeTab, setActiveTab] = useState<SidebarTab>("conversations")
   const [restored, setRestored] = useState(false)
 
   const toggle = useCallback(() => setIsOpen((prev) => !prev), [])
@@ -87,12 +82,10 @@ export function SidebarProvider({ children, folderId }: SidebarProviderProps) {
       width,
       minWidth: MIN_WIDTH,
       maxWidth: MAX_WIDTH,
-      activeTab,
       toggle,
       setWidth,
-      setActiveTab,
     }),
-    [activeTab, isOpen, width, toggle, setWidth]
+    [isOpen, width, toggle, setWidth]
   )
 
   return (

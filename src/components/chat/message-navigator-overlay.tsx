@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useMemo, useState } from "react"
+import { memo, useMemo, useState, type CSSProperties } from "react"
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,14 +10,15 @@ import type {
   SessionLocatorTarget,
 } from "@/lib/session-locator"
 import { cn } from "@/lib/utils"
-import { ChevronDownIcon, ChevronUpIcon, MapIcon } from "lucide-react"
+import { ChevronRightIcon, ChevronUpIcon, MapIcon } from "lucide-react"
 
-interface SessionLocatorOverlayProps {
+interface MessageNavigatorOverlayProps {
   items: SessionLocatorItem[]
   locatorKey?: string | null
   visible?: boolean
   defaultExpanded?: boolean
   className?: string
+  panelWidthPx?: number
   onJumpToTarget: (target: SessionLocatorTarget) => void
 }
 
@@ -39,7 +40,7 @@ function getPreviewText(
   }
 }
 
-const LocatorRow = memo(function LocatorRow({
+const NavigatorRow = memo(function NavigatorRow({
   label,
   preview,
   ariaLabel,
@@ -56,7 +57,7 @@ const LocatorRow = memo(function LocatorRow({
     "flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
     disabled
       ? "cursor-default text-muted-foreground"
-      : "cursor-pointer hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      : "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
   )
 
   if (disabled) {
@@ -76,11 +77,7 @@ const LocatorRow = memo(function LocatorRow({
   }
 
   return (
-    <button
-      type="button"
-      className={rowClassName}
-      onClick={onClick}
-    >
+    <button type="button" className={rowClassName} onClick={onClick}>
       {ariaLabel ? <span className="sr-only">{ariaLabel} </span> : null}
       <Badge
         variant="outline"
@@ -95,15 +92,16 @@ const LocatorRow = memo(function LocatorRow({
   )
 })
 
-export const SessionLocatorOverlay = memo(function SessionLocatorOverlay({
+export const MessageNavigatorOverlay = memo(function MessageNavigatorOverlay({
   items,
   locatorKey,
   visible = true,
-  defaultExpanded = false,
+  defaultExpanded = true,
   className,
+  panelWidthPx,
   onJumpToTarget,
-}: SessionLocatorOverlayProps) {
-  const t = useTranslations("Folder.chat.sessionLocatorOverlay")
+}: MessageNavigatorOverlayProps) {
+  const t = useTranslations("Folder.chat.messageNavigator")
   const hasItems = visible && items.length > 0
   const fallbackKey = useMemo(() => {
     if (items.length === 0) return null
@@ -113,13 +111,18 @@ export const SessionLocatorOverlay = memo(function SessionLocatorOverlay({
   }, [items])
   const currentLocatorKey = locatorKey ?? fallbackKey
   const currentLocatorStateKey =
-    currentLocatorKey ?? "__session_locator__default__"
-  const resolvedDefaultExpanded = defaultExpanded
+    currentLocatorKey ?? "__message_navigator__default__"
   const [collapsedByLocatorKey, setCollapsedByLocatorKey] = useState<
     Record<string, boolean>
   >({})
+  const panelStyle: CSSProperties | undefined = panelWidthPx
+    ? {
+        width: `${panelWidthPx}px`,
+        maxWidth: "100%",
+      }
+    : undefined
   const isExpanded = !(
-    collapsedByLocatorKey[currentLocatorStateKey] ?? !resolvedDefaultExpanded
+    collapsedByLocatorKey[currentLocatorStateKey] ?? !defaultExpanded
   )
 
   if (!hasItems) {
@@ -133,7 +136,7 @@ export const SessionLocatorOverlay = memo(function SessionLocatorOverlay({
           type="button"
           variant="secondary"
           size="sm"
-          className="cursor-pointer shadow-md bg-secondary/70 hover:bg-secondary"
+          className="h-8 w-44 justify-between gap-2 cursor-pointer shadow-md bg-secondary/70 hover:bg-secondary"
           onClick={() =>
             setCollapsedByLocatorKey((prev) => ({
               ...prev,
@@ -142,7 +145,9 @@ export const SessionLocatorOverlay = memo(function SessionLocatorOverlay({
           }
         >
           <MapIcon className="h-4 w-4" />
-          {t("collapsedSummary", { count: items.length })}
+          <span className="min-w-0 flex-1 truncate text-center">
+            {t("collapsedSummary", { count: items.length })}
+          </span>
           <ChevronUpIcon className="h-4 w-4" />
         </Button>
       </div>
@@ -151,10 +156,11 @@ export const SessionLocatorOverlay = memo(function SessionLocatorOverlay({
 
   return (
     <div
-      className={cn("pointer-events-auto flex w-full sm:w-72", className)}
+      className={cn("pointer-events-auto flex min-h-0 max-h-full min-w-0", className)}
+      style={panelStyle}
       data-locator-key={currentLocatorKey ?? undefined}
     >
-      <div className="w-full max-w-full rounded-xl border bg-card/60 shadow-lg backdrop-blur transition-colors hover:bg-card/95 supports-[backdrop-filter]:bg-card/50 supports-[backdrop-filter]:hover:bg-card/85">
+      <div className="flex min-h-0 max-h-full w-full flex-col rounded-xl border bg-card/60 shadow-lg backdrop-blur transition-colors hover:bg-card/95 supports-[backdrop-filter]:bg-card/50 supports-[backdrop-filter]:hover:bg-card/85">
         <div className="flex items-center justify-between border-b px-3 py-2">
           <div className="flex min-w-0 items-center gap-2">
             <MapIcon className="h-4 w-4 text-muted-foreground" />
@@ -175,12 +181,12 @@ export const SessionLocatorOverlay = memo(function SessionLocatorOverlay({
               }))
             }
           >
-            <ChevronDownIcon className="h-4 w-4" />
+            <ChevronRightIcon className="h-4 w-4" />
           </Button>
         </div>
 
         <div
-          className="max-h-96 space-y-2 overflow-y-auto p-3"
+          className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3"
           role="navigation"
           aria-label={t("title")}
         >
@@ -196,13 +202,13 @@ export const SessionLocatorOverlay = memo(function SessionLocatorOverlay({
                 key={item.id}
                 className="rounded-lg border bg-transparent px-1.5 py-1.5"
               >
-                <LocatorRow
+                <NavigatorRow
                   label={t("userLabel")}
                   preview={userPreview}
                   ariaLabel={t("jumpToUserAria")}
                   onClick={() => onJumpToTarget(item.user)}
                 />
-                <LocatorRow
+                <NavigatorRow
                   label={t("assistantLabel")}
                   preview={assistantPreview}
                   ariaLabel={t("jumpToAssistantAria")}

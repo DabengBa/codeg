@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useCallback, useEffect, useMemo, useRef } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { StickToBottomContext } from "use-stick-to-bottom"
 import { useConversationRuntime } from "@/contexts/conversation-runtime-context"
 import { ContentPartsRenderer } from "./content-parts-renderer"
@@ -19,6 +19,7 @@ import {
   AgentPlanOverlay,
   getLatestPlanEntries,
 } from "@/components/chat/agent-plan-overlay"
+import { MessageNavigatorOverlay } from "@/components/chat/message-navigator-overlay"
 import { MessageThread } from "@/components/ai-elements/message-thread"
 import { Message, MessageContent } from "@/components/ai-elements/message"
 import { Loader2 } from "lucide-react"
@@ -32,10 +33,24 @@ import {
   VirtualizedMessageThread,
   type VirtualizedMessageThreadHandle,
 } from "@/components/message/virtualized-message-thread"
+import { useSessionLocatorItems } from "@/hooks/use-session-locator-items"
+import { useTabContext } from "@/contexts/tab-context"
 import { useMessageHighlight } from "@/components/message/use-message-highlight"
 import { useSessionLocatorContext } from "@/contexts/session-locator-context"
 import { cn } from "@/lib/utils"
 import { useStickToBottomContext } from "use-stick-to-bottom"
+
+const MESSAGE_THREAD_MAX_WIDTH_PX = 768
+const MESSAGE_THREAD_CONTENT_SHELL_MAX_WIDTH_PX = 800
+const MESSAGE_NAVIGATOR_COLLAPSED_EXTRA_WIDTH_PX = 16
+const MESSAGE_NAVIGATOR_EXPANDED_EXTRA_WIDTH_PX = 96
+const MESSAGE_NAVIGATOR_COLLAPSED_THRESHOLD_PX =
+  MESSAGE_THREAD_MAX_WIDTH_PX + MESSAGE_NAVIGATOR_COLLAPSED_EXTRA_WIDTH_PX
+const MESSAGE_NAVIGATOR_EXPANDED_THRESHOLD_PX =
+  MESSAGE_THREAD_MAX_WIDTH_PX + MESSAGE_NAVIGATOR_EXPANDED_EXTRA_WIDTH_PX
+const OVERLAY_PANEL_MIN_WIDTH_PX = 288
+const OVERLAY_PANEL_MAX_WIDTH_PX = 448
+const OVERLAY_PANEL_GUTTER_PADDING_PX = 24
 
 interface MessageListViewProps {
   conversationId: number
@@ -186,7 +201,10 @@ export function MessageListView({
   const rootRef = useRef<HTMLDivElement>(null)
   const threadRef = useRef<VirtualizedMessageThreadHandle | null>(null)
   const stickToBottomContextRef = useRef<StickToBottomContext | null>(null)
+  const [containerWidth, setContainerWidth] = useState(0)
+  const { isTileMode } = useTabContext()
   const { registerJumpHandler } = useSessionLocatorContext()
+  const sessionLocatorItems = useSessionLocatorItems(conversationId)
   const { highlightedTarget, jumpToTarget } = useMessageHighlight({
     rootRef,
     threadRef,
@@ -197,6 +215,28 @@ export function MessageListView({
     () => registerJumpHandler(conversationId, jumpToTarget),
     [conversationId, jumpToTarget, registerJumpHandler]
   )
+
+  useEffect(() => {
+    const container = rootRef.current
+    if (!container) return
+
+    const updateWidth = (nextWidth: number) => {
+      setContainerWidth((prev) =>
+        Math.abs(prev - nextWidth) < 1 ? prev : nextWidth
+      )
+    }
+
+    updateWidth(container.clientWidth)
+
+    const observer = new ResizeObserver((entries) => {
+      updateWidth(entries[0]?.contentRect.width ?? container.clientWidth)
+    })
+
+    observer.observe(container)
+    return () => {
+      observer.disconnect()
+    }
+  }, [detailError, detailLoading, liveMessage, timelineTurns.length])
 
   useEffect(() => {
     if (isActive) {
@@ -330,6 +370,30 @@ export function MessageListView({
   const hasRenderableContent = threadItems.length > 0 || Boolean(liveMessage)
   const hasAgentPlanOverlay =
     livePlanEntries.length > 0 || historicalPlanEntries.length > 0
+  const overlayPanelWidthPx = useMemo(() => {
+    const contentShellWidth = Math.min(
+      containerWidth,
+      MESSAGE_THREAD_CONTENT_SHELL_MAX_WIDTH_PX
+    )
+    const rightGap = Math.max(0, (containerWidth - contentShellWidth) / 2)
+    const suggestedWidth = Math.floor(
+      Math.max(0, rightGap - OVERLAY_PANEL_GUTTER_PADDING_PX)
+    )
+
+    return Math.max(
+      OVERLAY_PANEL_MIN_WIDTH_PX,
+      Math.min(OVERLAY_PANEL_MAX_WIDTH_PX, suggestedWidth)
+    )
+  }, [containerWidth])
+  const canShowNavigatorCollapsed =
+    sessionLocatorItems.length > 0 &&
+    (isTileMode ||
+      containerWidth >= MESSAGE_NAVIGATOR_COLLAPSED_THRESHOLD_PX)
+  const showMessageNavigator =
+    canShowNavigatorCollapsed
+  const expandMessageNavigatorByDefault =
+    !hasAgentPlanOverlay &&
+    containerWidth >= MESSAGE_NAVIGATOR_EXPANDED_THRESHOLD_PX
 
   if (detailLoading && !hasRenderableContent) {
     return (
@@ -379,17 +443,31 @@ export function MessageListView({
           isStreaming={connStatus === "prompting"}
         />
       )}
-      {hasAgentPlanOverlay && (
-        <div className="pointer-events-none absolute inset-x-0 top-4 z-20 px-4 sm:px-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-            <AgentPlanOverlay
-              key={agentPlanOverlayKey}
-              className="max-w-full sm:ml-auto"
-              message={liveMessage ?? null}
-              entries={historicalPlanEntries}
-              planKey={historicalPlanKey}
-              defaultExpanded={connStatus === "prompting"}
-            />
+      {(hasAgentPlanOverlay || showMessageNavigator) && (
+        <div className="pointer-events-none absolute inset-x-0 top-4 bottom-4 z-20 px-4 sm:px-8">
+          <div className="flex h-full min-h-0 flex-col items-end gap-3">
+            {hasAgentPlanOverlay && (
+              <AgentPlanOverlay
+                key={agentPlanOverlayKey}
+                className="max-w-full"
+                message={liveMessage ?? null}
+                entries={historicalPlanEntries}
+                planKey={historicalPlanKey}
+                defaultExpanded={connStatus === "prompting"}
+                panelWidthPx={overlayPanelWidthPx}
+              />
+            )}
+            {showMessageNavigator && (
+              <MessageNavigatorOverlay
+                key={`navigator-${conversationId}-${expandMessageNavigatorByDefault ? "expanded" : "collapsed"}`}
+                className="max-w-full"
+                items={sessionLocatorItems}
+                locatorKey={`conversation-${conversationId}`}
+                onJumpToTarget={jumpToTarget}
+                defaultExpanded={expandMessageNavigatorByDefault}
+                panelWidthPx={overlayPanelWidthPx}
+              />
+            )}
           </div>
         </div>
       )}

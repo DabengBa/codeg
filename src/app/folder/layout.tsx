@@ -541,7 +541,7 @@ function FolderWorkspaceShell({ children }: { children: React.ReactNode }) {
         <ResizablePanel
           id={FOLDER_SHELL_LEFT_PANEL_ID}
           order={1}
-          defaultSize={18}
+          defaultSize={sidebarOpen ? 18 : 0}
           minSize={sidebarOpen ? sidebarSizeRange.minSize : 0}
           maxSize={sidebarOpen ? sidebarSizeRange.maxSize : 0}
         >
@@ -560,7 +560,13 @@ function FolderWorkspaceShell({ children }: { children: React.ReactNode }) {
         <ResizablePanel
           id={FOLDER_SHELL_MAIN_PANEL_ID}
           order={2}
-          defaultSize={64}
+          defaultSize={
+            sidebarOpen && auxOpen
+              ? 64
+              : sidebarOpen || auxOpen
+                ? 82
+                : 100
+          }
           minSize={10}
         >
           <main
@@ -576,7 +582,7 @@ function FolderWorkspaceShell({ children }: { children: React.ReactNode }) {
               <ResizablePanel
                 id={FOLDER_MAIN_WORKSPACE_PANEL_ID}
                 order={1}
-                defaultSize={72}
+                defaultSize={terminalOpen ? 72 : 100}
                 minSize={15}
               >
                 <WorkspaceContent>{children}</WorkspaceContent>
@@ -594,7 +600,7 @@ function FolderWorkspaceShell({ children }: { children: React.ReactNode }) {
               <ResizablePanel
                 id={FOLDER_MAIN_TERMINAL_PANEL_ID}
                 order={2}
-                defaultSize={28}
+                defaultSize={terminalOpen ? 28 : 0}
                 minSize={terminalOpen ? terminalSizeRange.minSize : 0}
                 maxSize={terminalOpen ? terminalSizeRange.maxSize : 0}
               >
@@ -616,7 +622,7 @@ function FolderWorkspaceShell({ children }: { children: React.ReactNode }) {
         <ResizablePanel
           id={FOLDER_SHELL_RIGHT_PANEL_ID}
           order={3}
-          defaultSize={18}
+          defaultSize={auxOpen ? 18 : 0}
           minSize={auxOpen ? auxSizeRange.minSize : 0}
           maxSize={auxOpen ? auxSizeRange.maxSize : 0}
         >

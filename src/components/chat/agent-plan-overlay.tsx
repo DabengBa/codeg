@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useMemo, useState } from "react"
+import { memo, useMemo, useState, type CSSProperties } from "react"
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,7 @@ interface AgentPlanOverlayProps {
   visible?: boolean
   defaultExpanded?: boolean
   className?: string
+  panelWidthPx?: number
 }
 
 export function getLatestPlanEntries(message: LiveMessage | null): PlanEntryInfo[] {
@@ -108,6 +109,7 @@ export const AgentPlanOverlay = memo(function AgentPlanOverlay({
   visible = true,
   defaultExpanded = true,
   className,
+  panelWidthPx,
 }: AgentPlanOverlayProps) {
   const t = useTranslations("Folder.chat.agentPlanOverlay")
   const liveEntries = useMemo(
@@ -138,6 +140,12 @@ export const AgentPlanOverlay = memo(function AgentPlanOverlay({
   const [collapsedByPlanKey, setCollapsedByPlanKey] = useState<
     Record<string, boolean>
   >({})
+  const panelStyle: CSSProperties | undefined = panelWidthPx
+    ? {
+        width: `${panelWidthPx}px`,
+        maxWidth: "100%",
+      }
+    : undefined
   const isExpanded = !(
     collapsedByPlanKey[currentPlanStateKey] ?? !resolvedDefaultExpanded
   )
@@ -153,7 +161,7 @@ export const AgentPlanOverlay = memo(function AgentPlanOverlay({
           type="button"
           variant="secondary"
           size="sm"
-          className="cursor-pointer shadow-md bg-secondary/70 hover:bg-secondary"
+          className="h-8 w-44 justify-between gap-2 cursor-pointer shadow-md bg-secondary/70 hover:bg-secondary"
           onClick={() =>
             setCollapsedByPlanKey((prev) => ({
               ...prev,
@@ -162,10 +170,12 @@ export const AgentPlanOverlay = memo(function AgentPlanOverlay({
           }
         >
           <ListTodoIcon className="h-4 w-4" />
-          {t("collapsedSummary", {
-            completed: completedCount,
-            total: resolvedEntries.length,
-          })}
+          <span className="min-w-0 flex-1 truncate text-center">
+            {t("collapsedSummary", {
+              completed: completedCount,
+              total: resolvedEntries.length,
+            })}
+          </span>
           <ChevronUpIcon className="h-4 w-4" />
         </Button>
       </div>
@@ -174,7 +184,8 @@ export const AgentPlanOverlay = memo(function AgentPlanOverlay({
 
   return (
     <div
-      className={cn("pointer-events-auto flex w-full sm:w-72", className)}
+      className={cn("pointer-events-auto flex min-w-0", className)}
+      style={panelStyle}
       data-plan-key={currentPlanKey ?? undefined}
     >
       <div className="w-full max-w-full rounded-xl border bg-card/60 shadow-lg backdrop-blur transition-colors hover:bg-card/95 supports-[backdrop-filter]:bg-card/50 supports-[backdrop-filter]:hover:bg-card/85">

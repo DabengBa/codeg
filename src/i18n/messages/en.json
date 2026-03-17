@@ -1281,10 +1281,10 @@
           "unknown": "Unknown"
         }
       },
-      "sessionLocatorOverlay": {
-        "title": "Session Locator",
-        "collapseAria": "Collapse session locator",
-        "collapsedSummary": "Locator {count}",
+      "messageNavigator": {
+        "title": "Message Navigator",
+        "collapseAria": "Collapse message navigator",
+        "collapsedSummary": "Navigator {count}",
         "userLabel": "User",
         "assistantLabel": "AI",
         "toolOnly": "Tool-only response",
