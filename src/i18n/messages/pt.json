@@ -1328,6 +1328,7 @@
       "liveTurnStats": {
         "thinking": "Pensando...",
         "streaming": "Transmitindo",
+        "elapsedHours": "{value} h",
         "elapsedMinutes": "{value} min",
         "elapsedSeconds": "{value} s",
         "toolUseCount": "{count} ferramenta {count, plural, one {use} other {uses}}"

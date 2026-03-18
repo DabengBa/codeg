@@ -1328,6 +1328,7 @@
       "liveTurnStats": {
         "thinking": "Thinking...",
         "streaming": "Streaming",
+        "elapsedHours": "{value}h",
         "elapsedMinutes": "{value}m",
         "elapsedSeconds": "{value}s",
         "toolUseCount": "{count} tool {count, plural, one {use} other {uses}}"
