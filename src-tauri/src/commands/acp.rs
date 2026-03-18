@@ -38,46 +38,6 @@ fn emit_acp_agents_updated(
     );
 }
 
-fn parse_version_output(output: &std::process::Output) -> Option<String> {
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    let mut first_non_empty: Option<String> = None;
-
-    for raw_line in stdout.lines().chain(stderr.lines()) {
-        let line = raw_line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if first_non_empty.is_none() {
-            first_non_empty = Some(line.to_string());
-        }
-
-        for raw_token in line.split_whitespace() {
-            let token = raw_token.trim_matches(|c: char| {
-                !(c.is_ascii_alphanumeric() || c == '.' || c == '@' || c == '-' || c == '_')
-            });
-            if token.is_empty() {
-                continue;
-            }
-
-            let candidate = token
-                .rsplit('@')
-                .next()
-                .unwrap_or(token)
-                .trim_matches(|c: char| !c.is_ascii_alphanumeric() && c != '.' && c != '-')
-                .trim_start_matches('v');
-
-            let is_version_like =
-                candidate.chars().any(|c| c.is_ascii_digit()) && candidate.contains('.');
-            if is_version_like {
-                return Some(candidate.to_string());
-            }
-        }
-    }
-
-    first_non_empty
-}
-
 fn is_version_like(value: &str) -> bool {
     value.chars().any(|c| c.is_ascii_digit()) && value.contains('.')
 }
@@ -118,151 +78,8 @@ fn package_name_from_spec(package: &str) -> String {
     normalized.to_string()
 }
 
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum NpmPackageBin {
-    Single(String),
-    Multiple(BTreeMap<String, String>),
-}
-
-#[derive(Deserialize)]
-struct NpmPackageManifest {
-    version: Option<String>,
-    bin: Option<NpmPackageBin>,
-}
-
-fn read_npx_cached_package_version(package_dir: &Path) -> Option<String> {
-    let manifest_path = package_dir.join("package.json");
-    let content = std::fs::read_to_string(manifest_path).ok()?;
-    let manifest: NpmPackageManifest = serde_json::from_str(&content).ok()?;
-    manifest
-        .version
-        .as_deref()
-        .and_then(normalize_version_candidate)
-}
-
-fn read_npx_cached_package_manifest(package_dir: &Path) -> Option<NpmPackageManifest> {
-    let manifest_path = package_dir.join("package.json");
-    let content = std::fs::read_to_string(manifest_path).ok()?;
-    serde_json::from_str(&content).ok()
-}
-
-fn npx_package_parts(package: &str) -> Vec<String> {
-    package_name_from_spec(package)
-        .split('/')
-        .filter(|part| !part.is_empty())
-        .map(ToString::to_string)
-        .collect()
-}
-
-fn npx_cached_package_dirs(cache_dir: &Path, package: &str) -> Vec<PathBuf> {
-    let package_parts = npx_package_parts(package);
-    if package_parts.is_empty() {
-        return vec![];
-    }
-
-    let npx_root = cache_dir.join("_npx");
-    let Ok(entries) = std::fs::read_dir(&npx_root) else {
-        return vec![];
-    };
-
-    let mut dirs = Vec::new();
-    for entry in entries.flatten() {
-        let root = entry.path();
-        if !root.is_dir() {
-            continue;
-        }
-
-        let mut package_dir = root.join("node_modules");
-        for part in &package_parts {
-            package_dir = package_dir.join(part);
-        }
-        if package_dir.is_dir() {
-            dirs.push(package_dir);
-        }
-    }
-
-    dirs
-}
-
-#[cfg(unix)]
-fn ensure_executable(path: &Path) -> std::io::Result<()> {
-    use std::os::unix::fs::PermissionsExt;
-
-    let metadata = std::fs::metadata(path)?;
-    let mut permissions = metadata.permissions();
-    let current = permissions.mode();
-    let next = current | 0o111;
-    if next != current {
-        permissions.set_mode(next);
-        std::fs::set_permissions(path, permissions)?;
-    }
-    Ok(())
-}
-
-#[cfg(not(unix))]
-fn ensure_executable(_path: &Path) -> std::io::Result<()> {
-    Ok(())
-}
-
-async fn ensure_npx_cached_bins_executable(package: &str) -> Result<(), AcpError> {
-    let Some(cache_dir) = npm_cache_dir().await else {
-        return Ok(());
-    };
-
-    for package_dir in npx_cached_package_dirs(&cache_dir, package) {
-        let Some(manifest) = read_npx_cached_package_manifest(&package_dir) else {
-            continue;
-        };
-
-        let mut bin_rel_paths = Vec::new();
-        match manifest.bin {
-            Some(NpmPackageBin::Single(path)) => bin_rel_paths.push(path),
-            Some(NpmPackageBin::Multiple(map)) => {
-                bin_rel_paths.extend(map.into_values());
-            }
-            None => {}
-        }
-
-        for rel_path in bin_rel_paths {
-            let script_path = package_dir.join(rel_path);
-            if !script_path.is_file() {
-                continue;
-            }
-            if let Err(e) = ensure_executable(&script_path) {
-                return Err(AcpError::protocol(format!(
-                    "failed to set executable permission for npx package script: {e}"
-                )));
-            }
-        }
-    }
-
-    Ok(())
-}
-
-async fn detect_npx_cached_version(package: &str) -> Option<String> {
-    let cache_dir = npm_cache_dir().await?;
-    let expected = version_from_package_spec(package);
-    let mut detected = None;
-
-    for package_dir in npx_cached_package_dirs(&cache_dir, package) {
-        let version = read_npx_cached_package_version(&package_dir).or_else(|| expected.clone());
-        if let Some(found) = version {
-            if expected.as_deref() == Some(found.as_str()) {
-                return Some(found);
-            }
-            if detected.is_none() {
-                detected = Some(found);
-            }
-        }
-    }
-
-    detected
-}
-
-async fn detect_uvx_cached_version(package: &str) -> Option<String> {
-    let output = crate::process::tokio_command("uvx")
-        .arg(package)
+async fn detect_global_cmd_version(cmd: &str) -> Option<String> {
+    let output = crate::process::tokio_command(cmd)
         .arg("--version")
         .output()
         .await
@@ -270,18 +87,16 @@ async fn detect_uvx_cached_version(package: &str) -> Option<String> {
     if !output.status.success() {
         return None;
     }
-    parse_version_output(&output).and_then(|value| normalize_version_candidate(&value))
+    let raw = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    normalize_version_candidate(&raw)
 }
 
 async fn detect_local_version(agent_type: AgentType) -> Option<String> {
     let meta = registry::get_agent_meta(agent_type);
     match meta.distribution {
-        registry::AgentDistribution::Npx { package, .. } => {
-            detect_npx_cached_version(package).await
+        registry::AgentDistribution::Npx { cmd, .. } => {
+            detect_global_cmd_version(cmd).await
         }
-        registry::AgentDistribution::Uvx { package, .. } => detect_uvx_cached_version(package)
-            .await
-            .or_else(|| version_from_package_spec(package)),
         registry::AgentDistribution::Binary { cmd, .. } => {
             binary_cache::detect_installed_version(agent_type, cmd)
                 .ok()
@@ -290,149 +105,50 @@ async fn detect_local_version(agent_type: AgentType) -> Option<String> {
     }
 }
 
-async fn prepare_npx_package(package: &str) -> Result<(), AcpError> {
-    let output = crate::process::tokio_command("npx")
-        .arg("--yes")
-        .arg("--package")
-        .arg(package)
-        .arg("--")
-        .arg("node")
-        .arg("-e")
-        .arg("process.exit(0)")
-        .output()
-        .await
-        .map_err(|e| AcpError::protocol(format!("failed to run npx: {e}")))?;
-
-    if !output.status.success() {
-        let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        let msg = if err.is_empty() {
-            "failed to prepare npx package".to_string()
-        } else {
-            format!("failed to prepare npx package: {err}")
-        };
-        return Err(AcpError::protocol(msg));
-    }
-
-    // Some npm packages ship bin scripts without executable bit.
-    // Normalize permissions in local npx cache to avoid runtime spawn failures.
-    ensure_npx_cached_bins_executable(package).await?;
-
-    Ok(())
-}
-
-async fn prepare_uvx_package(package: &str) -> Result<(), AcpError> {
-    let output = crate::process::tokio_command("uvx")
-        .arg(package)
-        .arg("--version")
-        .output()
-        .await
-        .map_err(|e| AcpError::protocol(format!("failed to run uvx: {e}")))?;
-
-    if !output.status.success() {
-        let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        let msg = if err.is_empty() {
-            "failed to prepare uvx package".to_string()
-        } else {
-            format!("failed to prepare uvx package: {err}")
-        };
-        return Err(AcpError::protocol(msg));
-    }
-
-    Ok(())
-}
-
-async fn npm_cache_dir() -> Option<PathBuf> {
+async fn install_npm_global_package(package: &str) -> Result<(), AcpError> {
     let output = crate::process::tokio_command("npm")
-        .arg("config")
-        .arg("get")
-        .arg("cache")
+        .arg("install")
+        .arg("-g")
+        .arg(package)
         .output()
         .await
-        .ok()?;
+        .map_err(|e| AcpError::protocol(format!("failed to run npm install -g: {e}")))?;
+
     if !output.status.success() {
-        return None;
-    }
-    let raw = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if raw.is_empty() || raw.eq_ignore_ascii_case("undefined") {
-        return None;
-    }
-    Some(PathBuf::from(raw))
-}
-
-fn remove_npx_package_cache(cache_dir: &Path, package_name: &str) -> Result<(), AcpError> {
-    let npx_root = cache_dir.join("_npx");
-    if !npx_root.exists() {
-        return Ok(());
-    }
-
-    let package_parts = package_name
-        .split('/')
-        .filter(|part| !part.is_empty())
-        .collect::<Vec<_>>();
-    if package_parts.is_empty() {
-        return Ok(());
-    }
-
-    let entries = std::fs::read_dir(&npx_root)
-        .map_err(|e| AcpError::protocol(format!("failed to read npx cache directory: {e}")))?;
-    for entry in entries.flatten() {
-        let root = entry.path();
-        if !root.is_dir() {
-            continue;
-        }
-        let mut package_dir = root.join("node_modules");
-        for part in &package_parts {
-            package_dir = package_dir.join(part);
-        }
-        if package_dir.exists() {
-            std::fs::remove_dir_all(&package_dir).map_err(|e| {
-                AcpError::protocol(format!("failed to remove npx package cache: {e}"))
-            })?;
-        }
+        let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        let msg = if err.is_empty() {
+            "failed to install npm package globally".to_string()
+        } else {
+            format!("failed to install npm package globally: {err}")
+        };
+        return Err(AcpError::protocol(msg));
     }
 
     Ok(())
 }
 
-async fn uninstall_npx_package(package: &str) -> Result<(), AcpError> {
+async fn uninstall_npm_global_package(package: &str) -> Result<(), AcpError> {
     let package_name = package_name_from_spec(package);
 
     if !package_name.is_empty() {
-        // Best effort: if package was installed globally, remove it as well.
-        let _ = crate::process::tokio_command("npm")
+        let output = crate::process::tokio_command("npm")
             .arg("uninstall")
             .arg("-g")
             .arg(&package_name)
             .output()
-            .await;
+            .await
+            .map_err(|e| AcpError::protocol(format!("failed to run npm uninstall -g: {e}")))?;
+
+        if !output.status.success() {
+            let err = String::from_utf8_lossy(&output.stderr).trim().to_string();
+            let msg = if err.is_empty() {
+                "failed to uninstall npm package globally".to_string()
+            } else {
+                format!("failed to uninstall npm package globally: {err}")
+            };
+            return Err(AcpError::protocol(msg));
+        }
     }
-
-    if let Some(cache_dir) = npm_cache_dir().await {
-        remove_npx_package_cache(&cache_dir, &package_name)?;
-    }
-
-    Ok(())
-}
-
-async fn uninstall_uvx_package(package: &str) -> Result<(), AcpError> {
-    let package_name = package_name_from_spec(package);
-    if package_name.is_empty() {
-        return Ok(());
-    }
-
-    // Best effort: remove package cache and any explicitly installed tool.
-    let _ = crate::process::tokio_command("uv")
-        .arg("cache")
-        .arg("clean")
-        .arg(&package_name)
-        .output()
-        .await;
-    let _ = crate::process::tokio_command("uv")
-        .arg("tool")
-        .arg("uninstall")
-        .arg(&package_name)
-        .output()
-        .await;
 
     Ok(())
 }
@@ -983,7 +699,6 @@ fn skill_storage_spec(agent_type: AgentType) -> Option<SkillStorageSpec> {
             global_dirs: vec![home_dir_or_default().join(".openclaw").join("skills")],
             project_rel_dirs: vec!["skills"],
         }),
-        _ => None,
     }
 }
 
@@ -1277,7 +992,13 @@ fn build_runtime_env_from_setting(
 }
 
 #[tauri::command]
-pub async fn acp_preflight(agent_type: AgentType) -> Result<PreflightResult, AcpError> {
+pub async fn acp_preflight(
+    agent_type: AgentType,
+    force_refresh: Option<bool>,
+) -> Result<PreflightResult, AcpError> {
+    if force_refresh.unwrap_or(false) {
+        preflight::clear_npm_env_cache();
+    }
     Ok(preflight::run_preflight(agent_type).await)
 }
 
@@ -1306,14 +1027,18 @@ pub async fn acp_connect(
         )));
     }
     let local_config_json = load_agent_local_config_json(agent_type);
-    let runtime_env =
+    let mut runtime_env =
         build_runtime_env_from_setting(agent_type, setting.as_ref(), local_config_json.as_deref());
 
-    if let registry::AgentDistribution::Npx { package, .. } = meta.distribution {
-        if detect_npx_cached_version(package).await.is_none() {
-            prepare_npx_package(package).await?;
-        } else {
-            ensure_npx_cached_bins_executable(package).await?;
+    // For OpenClaw: when creating a new conversation (no session_id to resume),
+    // signal that we want a fresh transcript via --reset-session.
+    if agent_type == AgentType::OpenClaw && session_id.is_none() {
+        runtime_env.insert("OPENCLAW_RESET_SESSION".into(), "1".into());
+    }
+
+    if let registry::AgentDistribution::Npx { cmd, package, .. } = meta.distribution {
+        if detect_global_cmd_version(cmd).await.is_none() {
+            install_npm_global_package(package).await?;
         }
     }
 
@@ -1403,6 +1128,44 @@ pub async fn acp_list_connections(
 }
 
 #[tauri::command]
+pub async fn acp_get_agent_status(
+    agent_type: AgentType,
+    db: tauri::State<'_, AppDatabase>,
+) -> Result<crate::acp::types::AcpAgentStatus, AcpError> {
+    let platform = registry::current_platform();
+    let meta = registry::get_agent_meta(agent_type);
+    let setting = agent_setting_service::get_by_agent_type(&db.conn, agent_type)
+        .await
+        .map_err(|e| AcpError::protocol(e.to_string()))?;
+
+    let (available, installed_version) = match &meta.distribution {
+        registry::AgentDistribution::Npx { .. } => (
+            true,
+            setting.as_ref().and_then(|m| m.installed_version.clone()),
+        ),
+        registry::AgentDistribution::Binary {
+            platforms, cmd, ..
+        } => {
+            let detected =
+                binary_cache::detect_installed_version(agent_type, cmd)
+                    .ok()
+                    .flatten();
+            (
+                platforms.iter().any(|p| p.platform == platform),
+                detected,
+            )
+        }
+    };
+
+    Ok(crate::acp::types::AcpAgentStatus {
+        agent_type,
+        available,
+        enabled: setting.map(|m| m.enabled).unwrap_or(true),
+        installed_version,
+    })
+}
+
+#[tauri::command]
 pub async fn acp_list_agents(
     db: tauri::State<'_, AppDatabase>,
 ) -> Result<Vec<AcpAgentInfo>, AcpError> {
@@ -1436,11 +1199,6 @@ pub async fn acp_list_agents(
             registry::AgentDistribution::Npx { .. } => (
                 true,
                 "npx",
-                setting.and_then(|m| m.installed_version.clone()),
-            ),
-            registry::AgentDistribution::Uvx { .. } => (
-                true,
-                "uvx",
                 setting.and_then(|m| m.installed_version.clone()),
             ),
             registry::AgentDistribution::Binary { platforms, cmd, .. } => {
@@ -1678,7 +1436,7 @@ pub async fn acp_download_agent_binary(
             emit_acp_agents_updated(&app, "binary_downloaded", Some(agent_type));
             Ok(())
         }
-        registry::AgentDistribution::Npx { .. } | registry::AgentDistribution::Uvx { .. } => Err(
+        registry::AgentDistribution::Npx { .. } => Err(
             AcpError::protocol("download is only supported for binary agents"),
         ),
     }
@@ -1735,7 +1493,7 @@ pub async fn acp_prepare_npx_agent(
                 .flatten()
                 .and_then(|m| m.installed_version);
 
-            prepare_npx_package(package).await?;
+            install_npm_global_package(package).await?;
             let resolved = detect_local_version(agent_type)
                 .await
                 .or_else(|| version_from_package_spec(package))
@@ -1747,7 +1505,7 @@ pub async fn acp_prepare_npx_agent(
                 .or(existing)
                 .ok_or_else(|| {
                     AcpError::protocol(
-                        "npx install succeeded but failed to determine local version",
+                        "npm global install succeeded but failed to determine local version",
                     )
                 })?;
 
@@ -1764,69 +1522,6 @@ pub async fn acp_prepare_npx_agent(
         registry::AgentDistribution::Binary { .. } => Err(AcpError::protocol(
             "prepare is only supported for npx agents",
         )),
-        registry::AgentDistribution::Uvx { .. } => Err(AcpError::protocol(
-            "prepare is only supported for npx agents",
-        )),
-    }
-}
-
-#[tauri::command]
-pub async fn acp_prepare_uvx_agent(
-    agent_type: AgentType,
-    registry_version: Option<String>,
-    db: State<'_, AppDatabase>,
-    app: tauri::AppHandle,
-) -> Result<String, AcpError> {
-    let meta = registry::get_agent_meta(agent_type);
-    match meta.distribution {
-        registry::AgentDistribution::Uvx { package, .. } => {
-            let default = agent_setting_service::AgentDefaultInput {
-                agent_type,
-                registry_id: registry::registry_id_for(agent_type).to_string(),
-                default_sort_order: i32::MAX / 2,
-            };
-            agent_setting_service::ensure_defaults(&db.conn, &[default])
-                .await
-                .map_err(|e| AcpError::protocol(e.to_string()))?;
-
-            let existing = agent_setting_service::get_by_agent_type(&db.conn, agent_type)
-                .await
-                .ok()
-                .flatten()
-                .and_then(|m| m.installed_version);
-
-            prepare_uvx_package(package).await?;
-            let resolved = detect_local_version(agent_type)
-                .await
-                .or_else(|| version_from_package_spec(package))
-                .or_else(|| {
-                    registry_version
-                        .as_deref()
-                        .and_then(normalize_version_candidate)
-                })
-                .or(existing)
-                .ok_or_else(|| {
-                    AcpError::protocol(
-                        "uvx install succeeded but failed to determine local version",
-                    )
-                })?;
-
-            agent_setting_service::set_installed_version(
-                &db.conn,
-                agent_type,
-                Some(resolved.clone()),
-            )
-            .await
-            .map_err(|e| AcpError::protocol(e.to_string()))?;
-            emit_acp_agents_updated(&app, "uvx_prepared", Some(agent_type));
-            Ok(resolved)
-        }
-        registry::AgentDistribution::Npx { .. } => Err(AcpError::protocol(
-            "prepare is only supported for uvx agents",
-        )),
-        registry::AgentDistribution::Binary { .. } => Err(AcpError::protocol(
-            "prepare is only supported for uvx agents",
-        )),
     }
 }
 
@@ -1842,10 +1537,7 @@ pub async fn acp_uninstall_agent(
             binary_cache::clear_agent_cache(agent_type)?;
         }
         registry::AgentDistribution::Npx { package, .. } => {
-            uninstall_npx_package(package).await?;
-        }
-        registry::AgentDistribution::Uvx { package, .. } => {
-            uninstall_uvx_package(package).await?;
+            uninstall_npm_global_package(package).await?;
         }
     }
 

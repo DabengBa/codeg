@@ -9,6 +9,7 @@ import type {
   SidebarData,
   ConnectionInfo,
   AcpAgentInfo,
+  AcpAgentStatus,
   AgentSkillScope,
   AgentSkillLayout,
   AgentSkillItem,
@@ -153,6 +154,12 @@ export async function acpListAgents(): Promise<AcpAgentInfo[]> {
   return invoke("acp_list_agents")
 }
 
+export async function acpGetAgentStatus(
+  agentType: AgentType
+): Promise<AcpAgentStatus> {
+  return invoke("acp_get_agent_status", { agentType })
+}
+
 export async function acpClearBinaryCache(agentType: AgentType): Promise<void> {
   return invoke("acp_clear_binary_cache", { agentType })
 }
@@ -174,16 +181,6 @@ export async function acpPrepareNpxAgent(
   registryVersion?: string | null
 ): Promise<string> {
   return invoke("acp_prepare_npx_agent", {
-    agentType,
-    registryVersion: registryVersion ?? null,
-  })
-}
-
-export async function acpPrepareUvxAgent(
-  agentType: AgentType,
-  registryVersion?: string | null
-): Promise<string> {
-  return invoke("acp_prepare_uvx_agent", {
     agentType,
     registryVersion: registryVersion ?? null,
   })
@@ -220,9 +217,13 @@ export async function acpReorderAgents(agentTypes: AgentType[]): Promise<void> {
 }
 
 export async function acpPreflight(
-  agentType: AgentType
+  agentType: AgentType,
+  forceRefresh?: boolean
 ): Promise<PreflightResult> {
-  return invoke("acp_preflight", { agentType })
+  return invoke("acp_preflight", {
+    agentType,
+    forceRefresh: forceRefresh ?? null,
+  })
 }
 
 export async function acpListAgentSkills(params: {

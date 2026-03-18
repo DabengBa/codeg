@@ -733,7 +733,9 @@
       "closeFileTab": "إغلاق تبويب الملف",
       "close": "إغلاق",
       "closeOthers": "إغلاق البقية",
-      "closeAll": "إغلاق الكل"
+      "closeAll": "إغلاق الكل",
+      "preview": "معاينة",
+      "editSource": "تحرير المصدر"
     },
     "terminal": {
       "rename": "إعادة تسمية",

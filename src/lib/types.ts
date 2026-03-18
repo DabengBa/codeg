@@ -2,23 +2,8 @@ export type AgentType =
   | "claude_code"
   | "codex"
   | "open_code"
-  | "auggie"
-  | "autohand"
-  | "cline"
-  | "codebuddy_code"
-  | "corust_agent"
   | "gemini"
-  | "github_copilot"
-  | "goose"
-  | "junie"
-  | "qoder"
-  | "qwen_code"
-  | "factory_droid"
-  | "kimi"
-  | "minion_code"
-  | "mistral_vibe"
   | "open_claw"
-  | "stakpak"
 
 export type AppErrorCode =
   | "invalid_input"
@@ -219,23 +204,8 @@ export const AGENT_DISPLAY_ORDER: AgentType[] = [
   "codex",
   "claude_code",
   "open_code",
-  "auggie",
-  "autohand",
-  "cline",
-  "codebuddy_code",
-  "corust_agent",
   "gemini",
-  "github_copilot",
-  "goose",
-  "junie",
-  "qoder",
-  "qwen_code",
-  "factory_droid",
-  "kimi",
-  "minion_code",
-  "mistral_vibe",
   "open_claw",
-  "stakpak",
 ]
 
 const AGENT_DISPLAY_ORDER_INDEX = new Map(
@@ -252,46 +222,16 @@ export const AGENT_LABELS: Record<AgentType, string> = {
   claude_code: "Claude Code",
   codex: "Codex",
   open_code: "OpenCode",
-  auggie: "Auggie",
-  autohand: "Autohand Code",
-  cline: "Cline",
-  codebuddy_code: "Codebuddy Code",
-  corust_agent: "Corust Agent",
   gemini: "Gemini CLI",
-  github_copilot: "GitHub Copilot",
-  goose: "goose",
-  junie: "Junie",
-  qoder: "Qoder",
-  qwen_code: "Qwen Code",
-  factory_droid: "Factory Droid",
-  kimi: "Kimi",
-  minion_code: "Minion Code",
-  mistral_vibe: "Mistral Vibe",
   open_claw: "OpenClaw",
-  stakpak: "Stakpak",
 }
 
 export const AGENT_COLORS: Record<AgentType, string> = {
   claude_code: "bg-orange-500",
   codex: "bg-green-500",
   open_code: "bg-blue-500",
-  auggie: "bg-purple-500",
-  autohand: "bg-emerald-500",
-  cline: "bg-rose-500",
-  codebuddy_code: "bg-violet-500",
-  corust_agent: "bg-amber-500",
   gemini: "bg-blue-400",
-  github_copilot: "bg-gray-700",
-  goose: "bg-lime-500",
-  junie: "bg-pink-500",
-  qoder: "bg-teal-500",
-  qwen_code: "bg-indigo-500",
-  factory_droid: "bg-yellow-600",
-  kimi: "bg-cyan-500",
-  minion_code: "bg-fuchsia-500",
-  mistral_vibe: "bg-red-500",
   open_claw: "bg-emerald-600",
-  stakpak: "bg-slate-600",
 }
 
 // ACP connection status (matches Rust ConnectionStatus)
@@ -464,6 +404,11 @@ export type AcpEvent =
       prompt_capabilities: PromptCapabilitiesInfo
     }
   | {
+      type: "fork_supported"
+      connection_id: string
+      supported: boolean
+    }
+  | {
       type: "mode_changed"
       connection_id: string
       mode_id: string
@@ -516,6 +461,14 @@ export interface AcpAgentInfo {
   opencode_auth_json: string | null
   codex_auth_json: string | null
   codex_config_toml: string | null
+}
+
+// Lightweight agent status returned by acp_get_agent_status
+export interface AcpAgentStatus {
+  agent_type: AgentType
+  available: boolean
+  enabled: boolean
+  installed_version: string | null
 }
 
 export type AgentSkillScope = "global" | "project"

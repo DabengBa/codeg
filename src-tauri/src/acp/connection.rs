@@ -123,7 +123,7 @@ async fn build_agent(
 
     match meta.distribution {
         AgentDistribution::Npx {
-            package, args, env, ..
+            cmd, args, env, ..
         } => {
             let merged_env = merge_agent_env(env, runtime_env);
             let mut parts: Vec<String> = Vec::new();
@@ -131,12 +131,10 @@ async fn build_agent(
                 parts.push(format!("{k}={v}"));
             }
             parts.push(
-                crate::process::normalized_program("npx")
+                crate::process::normalized_program(cmd)
                     .to_string_lossy()
                     .to_string(),
             );
-            parts.push("-y".into());
-            parts.push(package.into());
             for a in args {
                 parts.push((*a).into());
             }
@@ -156,22 +154,15 @@ async fn build_agent(
                     parts.push("--session".into());
                     parts.push(key.clone());
                 }
-            }
-            let refs: Vec<&str> = parts.iter().map(|s| s.as_str()).collect();
-            AcpAgent::from_args(&refs).map_err(|e| AcpError::SpawnFailed(e.to_string()))
-        }
-        AgentDistribution::Uvx {
-            package, args, env, ..
-        } => {
-            let merged_env = merge_agent_env(env, runtime_env);
-            let mut parts: Vec<String> = Vec::new();
-            for (k, v) in &merged_env {
-                parts.push(format!("{k}={v}"));
-            }
-            parts.push("uvx".into());
-            parts.push(package.into());
-            for a in args {
-                parts.push((*a).into());
+                // When creating a new conversation (no session_id to resume),
+                // pass --reset-session so OpenClaw mints a fresh transcript
+                // instead of appending to the previous one.
+                if runtime_env
+                    .get("OPENCLAW_RESET_SESSION")
+                    .map_or(false, |v| v == "1")
+                {
+                    parts.push("--reset-session".into());
+                }
             }
             let refs: Vec<&str> = parts.iter().map(|s| s.as_str()).collect();
             AcpAgent::from_args(&refs).map_err(|e| AcpError::SpawnFailed(e.to_string()))
@@ -629,6 +620,15 @@ async fn run_connection(
             eprintln!(
                 "[ACP] Agent capabilities: load_session={}, fork={}",
                 init_resp.agent_capabilities.load_session, supports_fork
+            );
+
+            // Emit fork support capability
+            let _ = handle.emit(
+                "acp://event",
+                AcpEvent::ForkSupported {
+                    connection_id: conn_id.clone(),
+                    supported: supports_fork,
+                },
             );
 
             // Emit connected status

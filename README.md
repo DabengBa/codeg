@@ -20,7 +20,7 @@
 
 Codeg (Code Generation) is an enterprise-grade multi-agent coding workspace.
 It unifies local AI coding agents (Claude Code, Codex CLI, OpenCode, Gemini CLI,
-etc.) in one desktop app with session aggregation, parallel `git worktree`
+OpenClaw, etc.) in one desktop app with session aggregation, parallel `git worktree`
 development, MCP/Skills management, and integrated Git/file/terminal workflows.
 
 ## Main Interface
@@ -31,7 +31,7 @@ development, MCP/Skills management, and integrated Git/file/terminal workflows.
 ![Codeg Light](./docs/images/main2-light.png#gh-light-mode-only)
 ![Codeg Dark](./docs/images/main2-dark.png#gh-dark-mode-only)
 
-> Current status: `v0.1.x` (fast iteration, suitable for early adopters)
+> Current status: `v0.2.x` (fast iteration, suitable for early adopters)
 
 ## Highlights
 
@@ -52,13 +52,13 @@ development, MCP/Skills management, and integrated Git/file/terminal workflows.
 | Codex CLI | `$CODEX_HOME/sessions` | `~/.codex/sessions` | `%USERPROFILE%\\.codex\\sessions` |
 | OpenCode | `$XDG_DATA_HOME/opencode/opencode.db` | `~/.local/share/opencode/opencode.db` | `%USERPROFILE%\\.local\\share\\opencode\\opencode.db` |
 | Gemini CLI | `$GEMINI_CLI_HOME/.gemini` | `~/.gemini` | `%USERPROFILE%\\.gemini` |
+| OpenClaw | — | `~/.openclaw/agents` | `%USERPROFILE%\\.openclaw\\agents` |
 
 > Note: environment variables take precedence over fallback paths.
 
 ### 2) ACP real-time sessions
 
-Built-in registry includes 20+ adapters, such as Claude Code, Codex CLI,
-Gemini CLI, OpenCode, OpenClaw, GitHub Copilot, Cline, Qwen Code, and others.
+Currently supports 5 agents: Claude Code, Codex CLI, Gemini CLI, OpenCode, and OpenClaw.
 
 ### 3) Skills settings support
 
