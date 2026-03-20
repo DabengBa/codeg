@@ -665,7 +665,9 @@ function FolderLayoutInner({ children }: { children: React.ReactNode }) {
                         <TerminalProvider>
                           <div className="flex h-screen flex-col overflow-hidden">
                             <FolderTitleBar />
-                            <FolderWorkspaceShell>{children}</FolderWorkspaceShell>
+                            <FolderWorkspaceShell>
+                              {children}
+                            </FolderWorkspaceShell>
                             <StatusBar />
                             <AppToaster
                               position="bottom-right"
