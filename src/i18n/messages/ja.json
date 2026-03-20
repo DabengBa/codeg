@@ -603,9 +603,6 @@
     },
     "sidebar": {
       "title": "会話",
-      "tabs": {
-        "directory": "目次"
-      },
       "locateActiveConversation": "アクティブな会話を表示",
       "expandAllGroups": "すべてのグループを展開",
       "collapseAllGroups": "すべてのグループを折りたたむ",
@@ -1288,7 +1285,6 @@
         "collapsedSummary": "ナビ {count}",
         "toolOnly": "ツール出力のみ",
         "attachmentOnly": "画像/添付ファイル",
-        "pendingReply": "返信なし",
         "emptyPreview": "プレビューはありません",
         "jumpToUserAria": "ユーザーメッセージへ移動",
         "jumpToAssistantAria": "AI の返信へ移動"

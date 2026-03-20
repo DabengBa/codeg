@@ -603,9 +603,6 @@
     },
     "sidebar": {
       "title": "Konversationen",
-      "tabs": {
-        "directory": "Verzeichnis"
-      },
       "locateActiveConversation": "Aktive Konversation finden",
       "expandAllGroups": "Alle Gruppen erweitern",
       "collapseAllGroups": "Alle Gruppen einklappen",
@@ -1288,7 +1285,6 @@
         "collapsedSummary": "Navigator {count}",
         "toolOnly": "Nur Werkzeugausgabe",
         "attachmentOnly": "Bilder/Anhänge",
-        "pendingReply": "Keine Antwort",
         "emptyPreview": "Keine Vorschau verfügbar",
         "jumpToUserAria": "Zur Benutzernachricht springen",
         "jumpToAssistantAria": "Zur KI-Antwort springen"

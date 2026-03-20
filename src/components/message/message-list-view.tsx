@@ -37,7 +37,6 @@ import { useSessionLocatorItems } from "@/hooks/use-session-locator-items"
 import { useTabContext } from "@/contexts/tab-context"
 import { useAuxPanelContext } from "@/contexts/aux-panel-context"
 import { useMessageHighlight } from "@/components/message/use-message-highlight"
-import { useSessionLocatorContext } from "@/contexts/session-locator-context"
 import { cn } from "@/lib/utils"
 import { useStickToBottomContext } from "use-stick-to-bottom"
 
@@ -56,10 +55,10 @@ const OVERLAY_STACK_VERTICAL_PADDING_PX = 32
 const OVERLAY_STACK_GAP_PX = 12
 const SHIFTED_MESSAGE_MIN_WIDTH_PX = 640
 const SHIFTED_MESSAGE_MIN_LEFT_MARGIN_PX = 24
-const SHIFTED_MESSAGE_MIN_LEFT_SHIFT_PX = 12
-const SHIFTED_MESSAGE_MAX_LEFT_SHIFT_PX = 40
-const SHIFTED_MESSAGE_BASE_WIDTH_REDUCTION_RATIO = 0.25
-const SHIFTED_MESSAGE_EXTRA_RIGHT_GAP_SHIFT_SHARE = 0.25
+const SHIFTED_MESSAGE_MIN_LEFT_SHIFT_PX = 34
+const SHIFTED_MESSAGE_MAX_LEFT_SHIFT_PX = 128
+const SHIFTED_MESSAGE_BASE_WIDTH_REDUCTION_RATIO = 0.1
+const SHIFTED_MESSAGE_EXTRA_RIGHT_GAP_SHIFT_SHARE = 0.8
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
@@ -226,18 +225,12 @@ export function MessageListView({
     minWidth: auxMinWidth,
     maxWidth: auxMaxWidth,
   } = useAuxPanelContext()
-  const { registerJumpHandler } = useSessionLocatorContext()
   const sessionLocatorItems = useSessionLocatorItems(conversationId)
   const { highlightedTarget, jumpToTarget } = useMessageHighlight({
     rootRef,
     threadRef,
     stopAutoStick: () => stickToBottomContextRef.current?.stopScroll(),
   })
-
-  useEffect(
-    () => registerJumpHandler(conversationId, jumpToTarget),
-    [conversationId, jumpToTarget, registerJumpHandler]
-  )
 
   useEffect(() => {
     const container = rootRef.current

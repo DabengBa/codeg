@@ -603,9 +603,6 @@
     },
     "sidebar": {
       "title": "대화",
-      "tabs": {
-        "directory": "목차"
-      },
       "locateActiveConversation": "활성 대화 찾기",
       "expandAllGroups": "모든 그룹 펼치기",
       "collapseAllGroups": "모든 그룹 접기",
@@ -1288,7 +1285,6 @@
         "collapsedSummary": "내비게이터 {count}",
         "toolOnly": "도구 출력만",
         "attachmentOnly": "이미지/첨부파일",
-        "pendingReply": "응답 없음",
         "emptyPreview": "미리보기가 없습니다",
         "jumpToUserAria": "사용자 메시지로 이동",
         "jumpToAssistantAria": "AI 응답으로 이동"

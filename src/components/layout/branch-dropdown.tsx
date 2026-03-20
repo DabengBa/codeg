@@ -646,7 +646,7 @@ export function BranchDropdown({
 
   if (branch === null) {
     return (
-      <DropdownMenu open={dropdownOpen} onOpenChange={handleDropdownOpenChange}>
+      <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-1 text-sm tracking-tight hover:text-foreground/80 transition-colors outline-none cursor-default">
             <GitFork className="h-3 w-3 shrink-0" />

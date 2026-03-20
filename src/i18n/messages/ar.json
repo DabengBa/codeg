@@ -603,9 +603,6 @@
     },
     "sidebar": {
       "title": "المحادثات",
-      "tabs": {
-        "directory": "الدليل"
-      },
       "locateActiveConversation": "تحديد المحادثة النشطة",
       "expandAllGroups": "توسيع كل المجموعات",
       "collapseAllGroups": "طي كل المجموعات",
@@ -1288,7 +1285,6 @@
         "collapsedSummary": "المستكشف {count}",
         "toolOnly": "استجابة أدوات فقط",
         "attachmentOnly": "صور/مرفقات",
-        "pendingReply": "لا يوجد رد",
         "emptyPreview": "لا تتوفر معاينة",
         "jumpToUserAria": "الانتقال إلى رسالة المستخدم",
         "jumpToAssistantAria": "الانتقال إلى رد AI"

@@ -8,7 +8,6 @@ export type LocatorPreviewKind =
   | "text"
   | "tool_only"
   | "attachment_only"
-  | "pending_reply"
   | "empty"
 
 export interface SessionLocatorRawTurn {

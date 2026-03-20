@@ -40,8 +40,6 @@ function getPreviewText(
       return t("toolOnly")
     case "attachment_only":
       return t("attachmentOnly")
-    case "pending_reply":
-      return t("pendingReply")
     default:
       return t("emptyPreview")
   }

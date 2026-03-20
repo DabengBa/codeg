@@ -603,9 +603,6 @@
     },
     "sidebar": {
       "title": "Conversas",
-      "tabs": {
-        "directory": "Diretório"
-      },
       "locateActiveConversation": "Localizar conversa ativa",
       "expandAllGroups": "Expandir todos os grupos",
       "collapseAllGroups": "Recolher todos os grupos",
@@ -1288,7 +1285,6 @@
         "collapsedSummary": "Navegador {count}",
         "toolOnly": "Somente saída de ferramentas",
         "attachmentOnly": "Imagens/anexos",
-        "pendingReply": "Sem resposta",
         "emptyPreview": "Nenhuma prévia disponível",
         "jumpToUserAria": "Ir para a mensagem do usuário",
         "jumpToAssistantAria": "Ir para a resposta da IA"
