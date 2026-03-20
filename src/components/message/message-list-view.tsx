@@ -35,7 +35,6 @@ import {
 } from "@/components/message/virtualized-message-thread"
 import { useSessionLocatorItems } from "@/hooks/use-session-locator-items"
 import { useTabContext } from "@/contexts/tab-context"
-import { useAuxPanelContext } from "@/contexts/aux-panel-context"
 import { useMessageHighlight } from "@/components/message/use-message-highlight"
 import { cn } from "@/lib/utils"
 import { useStickToBottomContext } from "use-stick-to-bottom"
@@ -51,22 +50,16 @@ const MESSAGE_NAVIGATOR_EXPANDED_THRESHOLD_PX =
 const OVERLAY_PANEL_MIN_WIDTH_PX = 288
 const OVERLAY_PANEL_MAX_WIDTH_PX = 448
 const OVERLAY_PANEL_GUTTER_PADDING_PX = 12
+const OVERLAY_PANEL_HORIZONTAL_INSET_PX = 32
 const OVERLAY_STACK_VERTICAL_PADDING_PX = 32
 const OVERLAY_STACK_GAP_PX = 12
 const SHIFTED_MESSAGE_MIN_WIDTH_PX = 640
 const SHIFTED_MESSAGE_MIN_LEFT_MARGIN_PX = 24
-const SHIFTED_MESSAGE_MIN_LEFT_SHIFT_PX = 34
-const SHIFTED_MESSAGE_MAX_LEFT_SHIFT_PX = 128
-const SHIFTED_MESSAGE_BASE_WIDTH_REDUCTION_RATIO = 0.1
-const SHIFTED_MESSAGE_EXTRA_RIGHT_GAP_SHIFT_SHARE = 0.8
-
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value))
-}
-
-function interpolate(min: number, max: number, ratio: number) {
-  return min + (max - min) * ratio
-}
+const SHIFTED_MESSAGE_MAX_LEFT_SHIFT_PX = 141
+const OVERLAY_PANEL_TARGET_RIGHT_GAP_PX =
+  OVERLAY_PANEL_MAX_WIDTH_PX +
+  OVERLAY_PANEL_GUTTER_PADDING_PX +
+  OVERLAY_PANEL_HORIZONTAL_INSET_PX
 
 interface MessageListViewProps {
   conversationId: number
@@ -219,12 +212,6 @@ export function MessageListView({
   const stickToBottomContextRef = useRef<StickToBottomContext | null>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const { isTileMode, tabs } = useTabContext()
-  const {
-    isOpen: auxOpen,
-    width: auxWidth,
-    minWidth: auxMinWidth,
-    maxWidth: auxMaxWidth,
-  } = useAuxPanelContext()
   const sessionLocatorItems = useSessionLocatorItems(conversationId)
   const { highlightedTarget, jumpToTarget } = useMessageHighlight({
     rootRef,
@@ -403,113 +390,77 @@ export function MessageListView({
   const containerWidth = containerSize.width
   const containerHeight = containerSize.height
   const shiftedThreadLayout = useMemo(() => {
+    if (containerWidth <= 0) {
+      return {
+        overlayPanelWidthPx: OVERLAY_PANEL_MAX_WIDTH_PX,
+        rowStyle: undefined,
+      }
+    }
+
     const contentShellWidth = Math.min(
       containerWidth,
       MESSAGE_THREAD_CONTENT_SHELL_MAX_WIDTH_PX
     )
     const centeredGap = Math.max(0, (containerWidth - contentShellWidth) / 2)
-
-    if (!auxOpen || isEffectivelyTiled || containerWidth <= 0) {
-      const panelWidth = Math.max(
-        OVERLAY_PANEL_MIN_WIDTH_PX,
-        Math.min(
-          OVERLAY_PANEL_MAX_WIDTH_PX,
-          Math.floor(Math.max(0, centeredGap - OVERLAY_PANEL_GUTTER_PADDING_PX))
-        )
-      )
-
-      return {
-        overlayPanelWidthPx: panelWidth,
-        rowStyle: undefined,
-      }
-    }
-
-    const normalizedAuxRatio = clamp(
-      (clamp(auxWidth, auxMinWidth, auxMaxWidth) - auxMinWidth) /
-        Math.max(1, auxMaxWidth - auxMinWidth),
+    const requiredExtraRightGap = Math.max(
       0,
-      1
+      OVERLAY_PANEL_TARGET_RIGHT_GAP_PX - centeredGap
     )
-    const targetOverlayWidth = Math.floor(
-      interpolate(
-        OVERLAY_PANEL_MIN_WIDTH_PX,
-        OVERLAY_PANEL_MAX_WIDTH_PX,
-        normalizedAuxRatio
-      )
-    )
-    const targetRightGap = targetOverlayWidth + OVERLAY_PANEL_GUTTER_PADDING_PX
-    const requiredExtraRightGap = Math.max(0, targetRightGap - centeredGap)
-
-    const reducibleWidth = Math.max(
-      0,
-      contentShellWidth - SHIFTED_MESSAGE_MIN_WIDTH_PX
-    )
-    const widthReductionBudget = Math.floor(
-      reducibleWidth *
-        interpolate(
-          SHIFTED_MESSAGE_BASE_WIDTH_REDUCTION_RATIO,
-          1,
-          normalizedAuxRatio
-        )
-    )
-    const initialLeftShiftBudget = Math.min(
-      interpolate(
-        SHIFTED_MESSAGE_MIN_LEFT_SHIFT_PX,
-        SHIFTED_MESSAGE_MAX_LEFT_SHIFT_PX,
-        normalizedAuxRatio
-      ),
+    const leftShiftBudget = Math.min(
+      SHIFTED_MESSAGE_MAX_LEFT_SHIFT_PX,
       Math.max(0, centeredGap - SHIFTED_MESSAGE_MIN_LEFT_MARGIN_PX)
     )
-    const initialLeftShift = Math.min(
-      initialLeftShiftBudget,
-      requiredExtraRightGap * SHIFTED_MESSAGE_EXTRA_RIGHT_GAP_SHIFT_SHARE
-    )
-    const widthReduction = Math.min(
-      widthReductionBudget,
-      Math.max(0, requiredExtraRightGap - initialLeftShift)
+    const leftShift = Math.floor(
+      Math.min(leftShiftBudget, requiredExtraRightGap)
     )
     const remainingExtraRightGap = Math.max(
       0,
-      requiredExtraRightGap - initialLeftShift - widthReduction
+      requiredExtraRightGap - leftShift
     )
-    const leftShift = Math.floor(
-      initialLeftShift +
-        Math.min(
-          Math.max(0, initialLeftShiftBudget - initialLeftShift),
-          remainingExtraRightGap
-        )
+    const widthReduction = Math.floor(
+      Math.min(
+        Math.max(0, contentShellWidth - SHIFTED_MESSAGE_MIN_WIDTH_PX),
+        remainingExtraRightGap
+      )
     )
     const targetWidth = Math.max(
       SHIFTED_MESSAGE_MIN_WIDTH_PX,
       Math.floor(contentShellWidth - widthReduction)
     )
-    const marginLeft = Math.max(0, Math.floor(centeredGap - leftShift))
-    const rightGap = Math.max(0, containerWidth - marginLeft - targetWidth)
+    const marginLeft = Math.max(
+      SHIFTED_MESSAGE_MIN_LEFT_MARGIN_PX,
+      Math.floor(centeredGap - leftShift)
+    )
+    const renderedTargetWidth = Math.min(containerWidth, targetWidth)
+    const rightGap = Math.max(
+      0,
+      containerWidth - marginLeft - renderedTargetWidth
+    )
     const overlayPanelWidthPx = Math.max(
       OVERLAY_PANEL_MIN_WIDTH_PX,
       Math.min(
         OVERLAY_PANEL_MAX_WIDTH_PX,
-        Math.floor(Math.max(0, rightGap - OVERLAY_PANEL_GUTTER_PADDING_PX))
+        Math.floor(
+          rightGap -
+            OVERLAY_PANEL_GUTTER_PADDING_PX -
+            OVERLAY_PANEL_HORIZONTAL_INSET_PX
+        )
       )
     )
+    const shouldApplyShiftedLayout = leftShift > 0 || widthReduction > 0
 
     return {
       overlayPanelWidthPx,
-      rowStyle: {
-        width: `${targetWidth}px`,
-        maxWidth: "100%",
-        marginLeft: `${marginLeft}px`,
-        marginRight: "auto",
-      },
+      rowStyle: shouldApplyShiftedLayout
+        ? {
+            width: `${targetWidth}px`,
+            maxWidth: "100%",
+            marginLeft: `${marginLeft}px`,
+            marginRight: "auto",
+          }
+        : undefined,
     }
-  }, [
-    auxMaxWidth,
-    auxMinWidth,
-    auxOpen,
-    auxWidth,
-    containerWidth,
-    isEffectivelyTiled,
-  ])
+  }, [containerWidth])
   const overlayPanelWidthPx = shiftedThreadLayout.overlayPanelWidthPx
   const shiftedThreadRowStyle = shiftedThreadLayout.rowStyle
   const overlayAvailableHeightPx = useMemo(
