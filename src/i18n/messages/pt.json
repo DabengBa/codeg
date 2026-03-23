@@ -57,6 +57,27 @@
       "clone": "Clonar"
     }
   },
+  "GitCredentialDialog": {
+    "title": "Autenticação necessária",
+    "description": "O servidor remoto requer credenciais. Insira seu nome de usuário e senha (ou token de acesso pessoal).",
+    "username": "Nome de usuário",
+    "usernamePlaceholder": "Nome de usuário ou e-mail",
+    "password": "Senha / Token",
+    "passwordPlaceholder": "Senha ou token de acesso pessoal",
+    "passwordHint": "Insira o nome de usuário e a senha do servidor.",
+    "cancel": "Cancelar",
+    "authenticate": "Autenticar",
+    "authenticating": "Autenticando...",
+    "invalidCredentials": "Credenciais inválidas. Tente novamente.",
+    "saveCredentials": "Salvar credenciais para operações futuras",
+    "githubTitle": "Autenticação do GitHub",
+    "githubDescription": "Insira um token de acesso pessoal para se conectar ao GitHub. O token será validado e salvo automaticamente.",
+    "githubToken": "Token de acesso pessoal",
+    "githubTokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "githubTokenHint": "Gere um token em GitHub → Settings → Developer settings → Personal access tokens.",
+    "githubAuthenticate": "Validar e conectar",
+    "generateToken": "Gerar token"
+  },
   "SettingsShell": {
     "title": "Configurações",
     "preferences": "Preferências",
@@ -66,6 +87,7 @@
       "mcp": "MCP",
       "skills": "Skills",
       "shortcuts": "Atalhos",
+      "version_control": "Controle de versão",
       "system": "Sistema"
     }
   },
@@ -126,6 +148,75 @@
       "downloadFailed": "Falha ao baixar o pacote de atualização. Tente novamente mais tarde.",
       "installFailed": "Falha ao instalar a atualização. Feche o app e tente novamente.",
       "unknown": "Falha na atualização. Tente novamente mais tarde."
+    }
+  },
+  "VersionControlSettings": {
+    "loading": "Carregando...",
+    "sectionTitle": "Controle de versão",
+    "sectionDescription": "Configure o executável Git e gerencie contas do GitHub.",
+    "gitTitle": "Configuração do Git",
+    "gitDescription": "Configure o executável Git usado pelo aplicativo.",
+    "gitDetected": "Git detectado",
+    "gitNotFound": "Git não encontrado no sistema",
+    "gitVersion": "Versão",
+    "gitPath": "Caminho",
+    "customGitPath": "Caminho personalizado do Git",
+    "customGitPathPlaceholder": "/usr/bin/git",
+    "customGitPathHint": "Deixe vazio para usar o caminho detectado automaticamente.",
+    "test": "Testar",
+    "testing": "Testando...",
+    "testSuccess": "Executável Git é válido.",
+    "testFailed": "Teste do Git falhou: {message}",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "saveSuccess": "Configurações do Git salvas.",
+    "saveFailed": "Falha ao salvar: {message}",
+    "githubTitle": "Contas do GitHub",
+    "githubDescription": "Gerencie contas do GitHub para autenticação. Os tokens são armazenados localmente.",
+    "noAccounts": "Nenhuma conta do GitHub configurada.",
+    "addAccount": "Adicionar conta",
+    "serverUrl": "URL do servidor",
+    "serverUrlPlaceholder": "https://github.com",
+    "token": "Token de acesso pessoal",
+    "tokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "generateToken": "Gerar token",
+    "tokenHint": "Gere um token em GitHub → Settings → Developer settings → Personal access tokens.",
+    "validateAndAdd": "Validar e adicionar",
+    "validating": "Validando...",
+    "addSuccess": "Conta {username} adicionada com sucesso.",
+    "addFailed": "Falha ao adicionar conta: {message}",
+    "testConnection": "Testar",
+    "connectionSuccess": "Conexão bem-sucedida.",
+    "connectionFailed": "Falha na conexão: {message}",
+    "setDefault": "Definir como padrão",
+    "defaultLabel": "Padrão",
+    "defaultSet": "Conta padrão atualizada.",
+    "removeAccount": "Remover",
+    "removeConfirmTitle": "Remover conta",
+    "removeConfirmMessage": "Tem certeza de que deseja remover a conta \"{username}\"?",
+    "removeConfirm": "Remover",
+    "removeCancel": "Cancelar",
+    "removeSuccess": "Conta removida.",
+    "scopes": "Escopos",
+    "loadFailed": "Falha ao carregar configurações: {message}",
+    "gitAccount": {
+      "sectionTitle": "Contas de servidor Git",
+      "sectionDescription": "Gerencie credenciais para servidores Git que não são GitHub (GitLab, Bitbucket, auto-hospedados, etc.).",
+      "noAccounts": "Nenhuma conta de servidor Git configurada.",
+      "addAccount": "Adicionar conta",
+      "addTitle": "Adicionar conta Git",
+      "addDescription": "Insira o endereço do servidor, nome de usuário e senha ou token de acesso.",
+      "serverUrl": "URL do servidor",
+      "serverUrlPlaceholder": "https://gitlab.example.com",
+      "username": "Nome de usuário",
+      "usernamePlaceholder": "Nome de usuário ou e-mail",
+      "password": "Senha / Token",
+      "passwordPlaceholder": "Senha ou token de acesso",
+      "passwordHint": "Insira a senha ou o token de acesso do servidor.",
+      "add": "Adicionar",
+      "serverRequired": "A URL do servidor é obrigatória.",
+      "usernameRequired": "O nome de usuário é obrigatório.",
+      "passwordRequired": "A senha é obrigatória."
     }
   },
   "ShortcutSettings": {
@@ -587,7 +678,8 @@
       "create": "Criar",
       "createAndSwitch": "Criar e alternar",
       "openFile": "Abrir arquivo",
-      "viewDiff": "Ver Diff"
+      "viewDiff": "Ver Diff",
+      "push": "Enviar..."
     },
     "modes": {
       "conversation": "Modo conversa",
@@ -783,6 +875,7 @@
     "branchDropdown": {
       "toasts": {
         "commitCodeCompleted": "Commit de código concluído",
+        "pushCodeCompleted": "Push de código concluído",
         "committedFiles": "{count, plural, one {# arquivo commitado} other {# arquivos commitados}}",
         "taskCompleted": "{label} concluído",
         "taskFailed": "{label} falhou",
@@ -791,6 +884,7 @@
         "allFilesUpToDate": "Todos os arquivos estão atualizados",
         "updatedFiles": "{count, plural, one {# arquivo atualizado} other {# arquivos atualizados}}",
         "openCommitWindowFailed": "Falha ao abrir a janela de commit",
+        "openPushWindowFailed": "Falha ao abrir janela de envio",
         "upstreamSet": "A branch upstream foi definida",
         "upstreamSetAndPushed": "Branch upstream definida e {count, plural, one {# commit} other {# commits}} enviado(s)",
         "noCommitsToPush": "Não há commits para enviar",
@@ -941,6 +1035,23 @@
       "clickFileToDiff": "Clique no nome do arquivo para ver o diff",
       "loadingDiff": "Carregando diff..."
     },
+    "pushWindow": {
+      "title": "Enviar código",
+      "noUnpushedCommits": "Nenhum commit não enviado",
+      "unpushed": "Não enviado",
+      "selectFileToViewDiff": "Selecione um arquivo para ver as diferenças",
+      "before": "Antes",
+      "after": "Depois",
+      "push": "Enviar",
+      "toasts": {
+        "pushSuccess": "Envio bem-sucedido",
+        "pushFailed": "Falha no envio",
+        "upstreamSet": "Branch remoto foi configurado",
+        "upstreamSetAndPushed": "Branch remoto configurado e {count} commits enviados",
+        "noCommitsToPush": "Nenhum commit para enviar",
+        "pushedCommits": "{count} commits enviados"
+      }
+    },
     "gitLogTab": {
       "filesTitle": "Arquivos",
       "expandAllFiles": "Expandir todos os arquivos",
@@ -974,7 +1085,8 @@
       "toasts": {
         "createdAndSwitchedNewBranch": "Nova branch criada e selecionada",
         "newBranchFromCommit": "{name} (de {shortHash})",
-        "createBranchFailed": "Falha ao criar branch"
+        "createBranchFailed": "Falha ao criar branch",
+        "openPushWindowFailed": "Falha ao abrir a janela de push"
       },
       "branchSelector": {
         "selectBranchPlaceholder": "Selecionar branch...",
@@ -1001,7 +1113,8 @@
       "actions": {
         "commitCode": "Commit do código",
         "rollback": "Reverter",
-        "addToVcs": "Adicionar ao VCS"
+        "addToVcs": "Adicionar ao VCS",
+        "delete": "Excluir"
       },
       "toasts": {
         "noAddableFilesInDir": "Nenhum arquivo alterado neste diretório pode ser adicionado ao VCS",
@@ -1012,11 +1125,16 @@
         "rolledBack": "{name} revertido",
         "rollbackFailed": "Falha no rollback",
         "addedFilesToVcs": "{count, plural, one {# arquivo} other {# arquivos}} adicionados ao VCS",
-        "rolledBackFiles": "{count, plural, one {# arquivo revertido} other {# arquivos revertidos}}"
+        "rolledBackFiles": "{count, plural, one {# arquivo revertido} other {# arquivos revertidos}}",
+        "deleted": "{name} excluído",
+        "deleteFailed": "Falha ao excluir",
+        "deletedFiles": "{count} arquivos excluídos",
+        "noDeletableFilesInDir": "Nenhum arquivo alterado neste diretório pode ser excluído"
       },
       "directoryDialog": {
         "descriptionAdd": "Selecione arquivos sob o diretório {path} para adicionar ao VCS.",
         "descriptionRollback": "Selecione arquivos sob o diretório {path} para reverter.",
+        "descriptionDelete": "Selecione arquivos no diretório {path} para excluir. Esta ação não pode ser desfeita.",
         "descriptionFallback": "Selecione arquivos para prosseguir.",
         "selectionCount": "Selecionados {selected} / {total} arquivos",
         "selectAll": "Selecionar todos",
@@ -1028,6 +1146,13 @@
         "title": "Confirmar rollback",
         "descriptionWithTarget": "Reverter alterações locais de {kind} \"{name}\"?",
         "descriptionFallback": "Reverter alterações locais?",
+        "kindDirectory": "diretório",
+        "kindFile": "arquivo"
+      },
+      "deleteConfirm": {
+        "title": "Confirmar exclusão",
+        "descriptionWithTarget": "Excluir {kind} \"{name}\"? Esta ação não pode ser desfeita.",
+        "descriptionFallback": "Esta ação não pode ser desfeita.",
         "kindDirectory": "diretório",
         "kindFile": "arquivo"
       }
@@ -1207,7 +1332,8 @@
         "autoLinkPreflightFailed": "Pré-voo do vínculo automático falhou: {message}",
         "connectFailedTitle": "Falha na conexão de {agent}",
         "toolFallbackTitle": "Ferramenta",
-        "eventErrorTitle": "Erro do agente"
+        "eventErrorTitle": "Erro do agente",
+        "notificationTurnComplete": "{agent} terminou de responder"
       },
       "connectionLifecycle": {
         "tasks": {

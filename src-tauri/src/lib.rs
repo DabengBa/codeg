@@ -2,6 +2,8 @@ mod acp;
 mod app_error;
 mod commands;
 mod db;
+pub mod git_credential;
+pub mod keyring_store;
 mod models;
 mod network;
 mod parsers;
@@ -13,7 +15,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use acp::manager::ConnectionManager;
 use commands::{
     acp as acp_commands, conversations, folder_commands, folders, mcp as mcp_commands,
-    system_settings, terminal as terminal_commands, windows,
+    notification, system_settings, terminal as terminal_commands, version_control, windows,
 };
 use tauri::Manager;
 use terminal::manager::TerminalManager;
@@ -38,6 +40,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_notification::init())
         .manage(ConnectionManager::new())
         .manage(TerminalManager::new())
         .manage(windows::SettingsWindowState::new())
@@ -260,10 +263,21 @@ pub fn run() {
             windows::focus_folder_window,
             windows::open_merge_window,
             windows::open_stash_window,
+            windows::open_push_window,
             system_settings::get_system_proxy_settings,
             system_settings::update_system_proxy_settings,
             system_settings::get_system_language_settings,
             system_settings::update_system_language_settings,
+            version_control::detect_git,
+            version_control::test_git_path,
+            version_control::get_git_settings,
+            version_control::update_git_settings,
+            version_control::get_github_accounts,
+            version_control::validate_github_token,
+            version_control::update_github_accounts,
+            version_control::save_account_token,
+            version_control::get_account_token,
+            version_control::delete_account_token,
             acp_commands::acp_preflight,
             acp_commands::acp_connect,
             acp_commands::acp_prompt,
@@ -306,6 +320,7 @@ pub fn run() {
             mcp_commands::mcp_upsert_local_server,
             mcp_commands::mcp_set_server_apps,
             mcp_commands::mcp_remove_server,
+            notification::send_notification,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

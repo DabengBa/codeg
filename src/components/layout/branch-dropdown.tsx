@@ -67,7 +67,6 @@ import {
   gitInit,
   gitPull,
   gitFetch,
-  gitPush,
   gitNewBranch,
   gitWorktreeAdd,
   gitCheckout,
@@ -78,9 +77,8 @@ import {
   openFolderWindow,
   openCommitWindow,
   setFolderParentBranch,
-  gitListConflicts,
-  gitHasMergeHead,
   openStashWindow,
+  openPushWindow,
 } from "@/lib/tauri"
 import { RemoteManageDialog } from "@/components/layout/remote-manage-dialog"
 import { ConflictDialog } from "@/components/layout/conflict-dialog"
@@ -92,6 +90,7 @@ import { toast } from "sonner"
 import { useFolderContext } from "@/contexts/folder-context"
 import { useTaskContext } from "@/contexts/task-context"
 import { useAlertContext } from "@/contexts/alert-context"
+import { useGitCredential } from "@/contexts/git-credential-context"
 
 interface BranchDropdownProps {
   branch: string | null
@@ -109,6 +108,12 @@ interface GitCommitSucceededEventPayload {
   committed_files: number
 }
 
+interface GitPushSucceededEventPayload {
+  folder_id: number
+  pushed_commits: number
+  upstream_set: boolean
+}
+
 export function BranchDropdown({
   branch,
   parentBranch,
@@ -120,6 +125,7 @@ export function BranchDropdown({
   const folderPath = folder?.path ?? ""
   const { addTask, updateTask, removeTask } = useTaskContext()
   const { pushAlert } = useAlertContext()
+  const { withCredentialRetry } = useGitCredential()
   const [branchList, setBranchList] = useState<GitBranchList>({
     local: [],
     remote: [],
@@ -184,6 +190,43 @@ export function BranchDropdown({
 
     return () => {
       disposeTauriListener(unlisten, "BranchDropdown.gitCommitSucceeded")
+    }
+  }, [folder, onBranchChange, t])
+
+  useEffect(() => {
+    if (!folder) return
+
+    let unlisten: UnlistenFn | null = null
+
+    listen<GitPushSucceededEventPayload>(
+      "folder://git-push-succeeded",
+      (event) => {
+        if (event.payload.folder_id !== folder.id) return
+        const { pushed_commits, upstream_set } = event.payload
+        let description: string
+        if (upstream_set) {
+          description =
+            pushed_commits === 0
+              ? t("toasts.upstreamSet")
+              : t("toasts.upstreamSetAndPushed", { count: pushed_commits })
+        } else if (pushed_commits === 0) {
+          description = t("toasts.noCommitsToPush")
+        } else {
+          description = t("toasts.pushedCommits", { count: pushed_commits })
+        }
+        toast.success(t("toasts.pushCodeCompleted"), { description })
+        onBranchChange()
+      }
+    )
+      .then((fn) => {
+        unlisten = fn
+      })
+      .catch((err) => {
+        console.error("[BranchDropdown] failed to listen push event:", err)
+      })
+
+    return () => {
+      disposeTauriListener(unlisten, "BranchDropdown.gitPushSucceeded")
     }
   }, [folder, onBranchChange, t])
 
@@ -296,129 +339,6 @@ export function BranchDropdown({
       await openFolderWindow(wtPath)
       await setFolderParentBranch(wtPath, branch)
     })
-  }
-
-  // Uses operation "merge" intentionally: MERGE_HEAD exists so merge state is
-  // already active. MergeWorkspace won't call gitStartPullMerge (only for "pull"),
-  // and ConflictDialog abort correctly runs git merge --abort.
-  async function showMergeConflictDialog() {
-    try {
-      const remaining = await gitListConflicts(folderPath)
-      setConflictInfo({
-        has_conflicts: true,
-        conflicted_files: remaining,
-        operation: "merge",
-      })
-    } catch {
-      setConflictInfo({
-        has_conflicts: true,
-        conflicted_files: [],
-        operation: "merge",
-      })
-    }
-  }
-
-  async function handlePush() {
-    // Pre-check: if MERGE_HEAD exists, show conflict dialog immediately
-    try {
-      if (await gitHasMergeHead(folderPath)) {
-        await showMergeConflictDialog()
-        return
-      }
-    } catch {
-      // Pre-check failed, continue with normal push flow
-    }
-
-    const taskId = `git-${++taskSeq.current}-${Date.now()}`
-    const label = t("tasks.pushCode")
-    setLoading(true)
-    addTask(taskId, label)
-    updateTask(taskId, { status: "running" })
-    try {
-      const result = await gitPush(folderPath)
-      updateTask(taskId, { status: "completed" })
-      onBranchChange()
-      let description: string | undefined
-      if (result.upstream_set) {
-        description =
-          result.pushed_commits === 0
-            ? t("toasts.upstreamSet")
-            : t("toasts.upstreamSetAndPushed", {
-                count: result.pushed_commits,
-              })
-      } else if (result.pushed_commits === 0) {
-        description = t("toasts.noCommitsToPush")
-      } else {
-        description = t("toasts.pushedCommits", {
-          count: result.pushed_commits,
-        })
-      }
-      toast.success(t("toasts.taskCompleted", { label }), {
-        description,
-      })
-    } catch (err) {
-      const errorMsg = toErrorMessage(err)
-      if (/MERGE_HEAD|unfinished merge/i.test(errorMsg)) {
-        // Unfinished merge — show conflict dialog
-        removeTask(taskId)
-        await showMergeConflictDialog()
-      } else if (/rejected|fetch first/i.test(errorMsg)) {
-        // Remote has new commits — auto-pull then retry push
-        updateTask(taskId, {
-          status: "running",
-        })
-        try {
-          const pullResult = await gitPull(folderPath)
-          if (pullResult.conflict?.has_conflicts) {
-            removeTask(taskId)
-            onBranchChange()
-            setConflictInfo(pullResult.conflict)
-          } else {
-            // Pull succeeded, retry push
-            updateTask(taskId, { status: "running" })
-            const pushResult = await gitPush(folderPath)
-            updateTask(taskId, { status: "completed" })
-            onBranchChange()
-            let description: string | undefined
-            if (pushResult.upstream_set) {
-              description =
-                pushResult.pushed_commits === 0
-                  ? t("toasts.upstreamSet")
-                  : t("toasts.upstreamSetAndPushed", {
-                      count: pushResult.pushed_commits,
-                    })
-            } else if (pushResult.pushed_commits === 0) {
-              description = t("toasts.noCommitsToPush")
-            } else {
-              description = t("toasts.pushedCommits", {
-                count: pushResult.pushed_commits,
-              })
-            }
-            toast.success(t("toasts.taskCompleted", { label }), {
-              description,
-            })
-          }
-        } catch (pullErr) {
-          const pullErrMsg = toErrorMessage(pullErr)
-          if (/MERGE_HEAD|unfinished merge/i.test(pullErrMsg)) {
-            removeTask(taskId)
-            await showMergeConflictDialog()
-          } else {
-            removeTask(taskId)
-            const pullErrTitle = t("toasts.taskFailed", { label })
-            pushAlert("error", pullErrTitle, pullErrMsg)
-            toast.error(pullErrTitle, { description: pullErrMsg })
-          }
-        }
-      } else {
-        removeTask(taskId)
-        const errorTitle = t("toasts.taskFailed", { label })
-        pushAlert("error", errorTitle, errorMsg)
-        toast.error(errorTitle, { description: errorMsg })
-      }
-    } finally {
-      setLoading(false)
-    }
   }
 
   function handleMergeParent() {
@@ -686,7 +606,10 @@ export function BranchDropdown({
               onSelect={() =>
                 runGitTask(
                   t("tasks.pullCode"),
-                  () => gitPull(folderPath),
+                  () =>
+                    withCredentialRetry((creds) => gitPull(folderPath, creds), {
+                      folderPath,
+                    }),
                   (result) => {
                     if (result.conflict?.has_conflicts) {
                       setConflictInfo(result.conflict)
@@ -708,7 +631,11 @@ export function BranchDropdown({
             <DropdownMenuItem
               disabled={loading}
               onSelect={() =>
-                runGitTask(t("tasks.fetchInfo"), () => gitFetch(folderPath))
+                runGitTask(t("tasks.fetchInfo"), () =>
+                  withCredentialRetry((creds) => gitFetch(folderPath, creds), {
+                    folderPath,
+                  })
+                )
               }
             >
               <RefreshCw className="h-3.5 w-3.5" />
@@ -733,7 +660,19 @@ export function BranchDropdown({
               <GitCommitHorizontal className="h-3.5 w-3.5" />
               {t("openCommitWindow")}
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={loading} onSelect={handlePush}>
+            <DropdownMenuItem
+              disabled={loading}
+              onSelect={() => {
+                if (!folder) return
+                setDropdownOpen(false)
+                openPushWindow(folder.id).catch((err) => {
+                  const title = t("toasts.openPushWindowFailed")
+                  const msg = toErrorMessage(err)
+                  pushAlert("error", title, msg)
+                  toast.error(title, { description: msg })
+                })
+              }}
+            >
               <Upload className="h-3.5 w-3.5" />
               {t("pushCode")}
             </DropdownMenuItem>

@@ -5,4 +5,6 @@ pub mod folders;
 pub mod mcp;
 pub mod system_settings;
 pub mod terminal;
+pub mod version_control;
+pub mod notification;
 pub mod windows;

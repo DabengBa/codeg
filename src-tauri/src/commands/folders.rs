@@ -1,9 +1,9 @@
 use std::collections::{hash_map::DefaultHasher, HashMap, HashSet};
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 use std::hash::{Hash, Hasher};
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 use std::sync::{mpsc, LazyLock, Mutex};
 use std::time::{Duration, Instant, UNIX_EPOCH};
 
@@ -14,11 +14,106 @@ use tauri::Emitter;
 use tokio::sync::Semaphore;
 use walkdir::WalkDir;
 
+use tauri::Manager;
+
 use crate::app_error::AppCommandError;
 use crate::db::error::DbError;
 use crate::db::service::folder_service;
 use crate::db::AppDatabase;
-use crate::models::{FolderDetail, FolderHistoryEntry, OpenedConversation};
+use crate::models::{FolderDetail, FolderHistoryEntry, GitCredentials, OpenedConversation};
+
+/// Configure a git command for remote operations:
+/// - Always disable interactive prompts (prevent hanging in a GUI app)
+/// - If explicit credentials are provided, use them directly
+/// - Otherwise, try to inject stored account credentials
+async fn prepare_remote_git_cmd(
+    cmd: &mut tokio::process::Command,
+    repo_path: &str,
+    credentials: Option<&GitCredentials>,
+    db: &AppDatabase,
+    app_handle: &tauri::AppHandle,
+) {
+    cmd.env("GIT_TERMINAL_PROMPT", "0")
+        .stdin(Stdio::null());
+
+    if let Ok(data_dir) = app_handle.path().app_data_dir() {
+        if let Some(creds) = credentials {
+            // Explicit credentials provided (e.g. from credential dialog)
+            if let Ok(askpass) = crate::git_credential::ensure_askpass_script(&data_dir) {
+                crate::git_credential::inject_credentials(
+                    cmd,
+                    &creds.username,
+                    &creds.password,
+                    &askpass,
+                );
+            }
+        } else {
+            // Fall back to stored accounts
+            crate::git_credential::try_inject_for_repo(cmd, repo_path, &db.conn, &data_dir).await;
+        }
+    }
+}
+
+/// Same as `prepare_remote_git_cmd` but for clone (URL only, no repo yet).
+async fn prepare_remote_git_cmd_for_url(
+    cmd: &mut tokio::process::Command,
+    clone_url: &str,
+    credentials: Option<&GitCredentials>,
+    db: &AppDatabase,
+    app_handle: &tauri::AppHandle,
+) {
+    cmd.env("GIT_TERMINAL_PROMPT", "0")
+        .stdin(Stdio::null());
+
+    if let Ok(data_dir) = app_handle.path().app_data_dir() {
+        if let Some(creds) = credentials {
+            if let Ok(askpass) = crate::git_credential::ensure_askpass_script(&data_dir) {
+                crate::git_credential::inject_credentials(
+                    cmd,
+                    &creds.username,
+                    &creds.password,
+                    &askpass,
+                );
+            }
+        } else {
+            crate::git_credential::try_inject_for_url(cmd, clone_url, &db.conn, &data_dir).await;
+        }
+    }
+}
+
+/// Classify a git remote command error, detecting authentication failures.
+fn classify_remote_git_error(operation: &str, stderr: &[u8]) -> AppCommandError {
+    let msg = String::from_utf8_lossy(stderr).trim().to_string();
+    eprintln!("[GIT_CMD] {} failed, stderr: {}", operation, msg);
+    let lower = msg.to_lowercase();
+
+    if lower.contains("authentication failed")
+        || lower.contains("invalid credentials")
+        || lower.contains("could not read username")
+        || lower.contains("could not read password")
+        || lower.contains("logon failed")
+        || lower.contains("terminal prompts disabled")
+        || lower.contains("the requested url returned error: 401")
+        || lower.contains("the requested url returned error: 403")
+        || lower.contains("http basic: access denied")
+    {
+        return AppCommandError::authentication_failed(format!(
+            "git {operation}: authentication failed. Configure a GitHub account in Settings → Version Control."
+        ))
+        .with_detail(msg);
+    }
+
+    if lower.contains("could not resolve host")
+        || lower.contains("unable to access")
+        || lower.contains("connection refused")
+        || lower.contains("network is unreachable")
+    {
+        return AppCommandError::network(format!("git {operation}: network error"))
+            .with_detail(msg);
+    }
+
+    AppCommandError::external_command(format!("git {operation} failed"), msg)
+}
 
 #[derive(Debug, Serialize)]
 pub struct GitStatusEntry {
@@ -97,6 +192,13 @@ pub struct GitRemote {
 struct GitCommitSucceededEvent {
     folder_id: i32,
     committed_files: usize,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct GitPushSucceededEvent {
+    folder_id: i32,
+    pushed_commits: usize,
+    upstream_set: bool,
 }
 
 struct FileWatchEntry {
@@ -409,15 +511,24 @@ pub async fn create_folder_directory(path: String) -> Result<(), AppCommandError
 }
 
 #[tauri::command]
-pub async fn clone_repository(url: String, target_dir: String) -> Result<(), AppCommandError> {
+pub async fn clone_repository(
+    url: String,
+    target_dir: String,
+    credentials: Option<GitCredentials>,
+    db: tauri::State<'_, AppDatabase>,
+    app_handle: tauri::AppHandle,
+) -> Result<(), AppCommandError> {
     if url.trim().is_empty() || target_dir.trim().is_empty() {
         return Err(AppCommandError::invalid_input(
             "Repository URL and target directory are required",
         ));
     }
 
-    let output = crate::process::tokio_command("git")
-        .args(["clone", &url, &target_dir])
+    let mut cmd = crate::process::tokio_command("git");
+    cmd.args(["clone", &url, &target_dir]);
+    prepare_remote_git_cmd_for_url(&mut cmd, &url, credentials.as_ref(), &db, &app_handle).await;
+
+    let output = cmd
         .output()
         .await
         .map_err(|e| {
@@ -464,6 +575,12 @@ fn classify_git_clone_error(stderr: &str) -> AppCommandError {
 
     if normalized.contains("authentication failed")
         || normalized.contains("could not read username")
+        || normalized.contains("could not read password")
+        || normalized.contains("logon failed")
+        || normalized.contains("terminal prompts disabled")
+        || normalized.contains("the requested url returned error: 401")
+        || normalized.contains("the requested url returned error: 403")
+        || normalized.contains("http basic: access denied")
         || normalized.contains("permission denied (publickey)")
     {
         return AppCommandError::authentication_failed(
@@ -532,19 +649,26 @@ pub async fn git_init(path: String) -> Result<(), AppCommandError> {
 }
 
 #[tauri::command]
-pub async fn git_pull(path: String) -> Result<GitPullResult, AppCommandError> {
+pub async fn git_pull(
+    path: String,
+    credentials: Option<GitCredentials>,
+    db: tauri::State<'_, AppDatabase>,
+    app_handle: tauri::AppHandle,
+) -> Result<GitPullResult, AppCommandError> {
     let head_before = get_head_hash(&path).await?;
 
     // Step 1: fetch from remote
-    let fetch_output = crate::process::tokio_command("git")
-        .args(["fetch"])
-        .current_dir(&path)
+    let mut fetch_cmd = crate::process::tokio_command("git");
+    fetch_cmd.args(["fetch"]).current_dir(&path);
+    prepare_remote_git_cmd(&mut fetch_cmd, &path, credentials.as_ref(), &db, &app_handle).await;
+
+    let fetch_output = fetch_cmd
         .output()
         .await
         .map_err(AppCommandError::io)?;
 
     if !fetch_output.status.success() {
-        return Err(git_command_error("fetch", &fetch_output.stderr));
+        return Err(classify_remote_git_error("fetch", &fetch_output.stderr));
     }
 
     // Step 2: check if upstream exists
@@ -701,22 +825,35 @@ pub async fn git_has_merge_head(path: String) -> Result<bool, AppCommandError> {
 }
 
 #[tauri::command]
-pub async fn git_fetch(path: String) -> Result<String, AppCommandError> {
-    let output = crate::process::tokio_command("git")
-        .args(["fetch", "--all"])
-        .current_dir(&path)
+pub async fn git_fetch(
+    path: String,
+    credentials: Option<GitCredentials>,
+    db: tauri::State<'_, AppDatabase>,
+    app_handle: tauri::AppHandle,
+) -> Result<String, AppCommandError> {
+    let mut cmd = crate::process::tokio_command("git");
+    cmd.args(["fetch", "--all"]).current_dir(&path);
+    prepare_remote_git_cmd(&mut cmd, &path, credentials.as_ref(), &db, &app_handle).await;
+
+    let output = cmd
         .output()
         .await
         .map_err(AppCommandError::io)?;
 
     if !output.status.success() {
-        return Err(git_command_error("fetch --all", &output.stderr));
+        return Err(classify_remote_git_error("fetch --all", &output.stderr));
     }
     Ok(String::from_utf8_lossy(&output.stderr).trim().to_string())
 }
 
 #[tauri::command]
-pub async fn git_push(path: String) -> Result<GitPushResult, AppCommandError> {
+pub async fn git_push(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+    path: String,
+    credentials: Option<GitCredentials>,
+    db: tauri::State<'_, AppDatabase>,
+) -> Result<GitPushResult, AppCommandError> {
     let pushed_commits = estimate_push_commit_count(&path).await;
 
     // Check if the current branch has an upstream configured
@@ -741,28 +878,42 @@ pub async fn git_push(path: String) -> Result<GitPushResult, AppCommandError> {
             .trim()
             .to_string();
 
-        crate::process::tokio_command("git")
-            .args(["push", "--set-upstream", "origin", &branch])
-            .current_dir(&path)
-            .output()
-            .await
-            .map_err(AppCommandError::io)?
+        let mut cmd = crate::process::tokio_command("git");
+        cmd.args(["push", "--set-upstream", "origin", &branch])
+            .current_dir(&path);
+        prepare_remote_git_cmd(&mut cmd, &path, credentials.as_ref(), &db, &app).await;
+        cmd.output().await.map_err(AppCommandError::io)?
     } else {
-        crate::process::tokio_command("git")
-            .args(["push"])
-            .current_dir(&path)
-            .output()
-            .await
-            .map_err(AppCommandError::io)?
+        let mut cmd = crate::process::tokio_command("git");
+        cmd.args(["push"]).current_dir(&path);
+        prepare_remote_git_cmd(&mut cmd, &path, credentials.as_ref(), &db, &app).await;
+        cmd.output().await.map_err(AppCommandError::io)?
     };
 
     if !output.status.success() {
-        return Err(git_command_error("push", &output.stderr));
+        return Err(classify_remote_git_error("push", &output.stderr));
+    }
+
+    let upstream_set = !has_upstream;
+
+    if let Some(folder_id) = window
+        .label()
+        .strip_prefix("push-")
+        .and_then(|value| value.parse::<i32>().ok())
+    {
+        let _ = app.emit(
+            "folder://git-push-succeeded",
+            GitPushSucceededEvent {
+                folder_id,
+                pushed_commits,
+                upstream_set,
+            },
+        );
     }
 
     Ok(GitPushResult {
         pushed_commits,
-        upstream_set: !has_upstream,
+        upstream_set,
     })
 }
 
@@ -1075,7 +1226,7 @@ pub async fn git_stash_show(
 pub async fn git_status(path: String) -> Result<Vec<GitStatusEntry>, AppCommandError> {
     let output = crate::process::tokio_command("git")
         .args(["-c", "core.quotePath=false"])
-        .args(["status", "--porcelain=v1", "-uall"])
+        .args(["status", "--porcelain=v1", "-unormal"])
         .current_dir(&path)
         .output()
         .await
@@ -1255,6 +1406,7 @@ pub async fn git_show_file(
 pub async fn git_commit(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
+    db: tauri::State<'_, AppDatabase>,
     path: String,
     message: String,
     files: Vec<String>,
@@ -1274,10 +1426,23 @@ pub async fn git_commit(
         return Err(git_command_error("add", &add_output.stderr));
     }
 
+    // Resolve commit author from matching account (e.g. GitHub username)
+    let author_override =
+        crate::git_credential::resolve_commit_author(&path, &db.conn).await;
+
     // Commit
-    let commit_output = crate::process::tokio_command("git")
-        .args(["commit", "-m", &message])
-        .current_dir(&path)
+    let mut commit_cmd = crate::process::tokio_command("git");
+    if let Some((ref name, ref email)) = author_override {
+        commit_cmd.args([
+            "-c",
+            &format!("user.name={name}"),
+            "-c",
+            &format!("user.email={email}"),
+        ]);
+    }
+    commit_cmd.args(["commit", "-m", &message]).current_dir(&path);
+
+    let commit_output = commit_cmd
         .output()
         .await
         .map_err(AppCommandError::io)?;
@@ -1503,18 +1668,24 @@ pub async fn git_list_remotes(path: String) -> Result<Vec<GitRemote>, AppCommand
 }
 
 #[tauri::command]
-pub async fn git_fetch_remote(path: String, name: String) -> Result<String, AppCommandError> {
-    let output = crate::process::tokio_command("git")
-        .args(["fetch", &name])
-        .current_dir(&path)
-        .env("GIT_TERMINAL_PROMPT", "0")
-        .stdin(std::process::Stdio::null())
+pub async fn git_fetch_remote(
+    path: String,
+    name: String,
+    credentials: Option<GitCredentials>,
+    db: tauri::State<'_, AppDatabase>,
+    app_handle: tauri::AppHandle,
+) -> Result<String, AppCommandError> {
+    let mut cmd = crate::process::tokio_command("git");
+    cmd.args(["fetch", &name]).current_dir(&path);
+    prepare_remote_git_cmd(&mut cmd, &path, credentials.as_ref(), &db, &app_handle).await;
+
+    let output = cmd
         .output()
         .await
         .map_err(AppCommandError::io)?;
 
     if !output.status.success() {
-        return Err(git_command_error("fetch", &output.stderr));
+        return Err(classify_remote_git_error("fetch", &output.stderr));
     }
     Ok(String::from_utf8_lossy(&output.stderr).trim().to_string())
 }
@@ -1883,7 +2054,7 @@ fn git_check_ignored_paths(
         return Ok(HashSet::new());
     }
 
-    let mut child = Command::new("git")
+    let mut child = crate::process::std_command("git")
         .args(["check-ignore", "--stdin", "-z"])
         .current_dir(repo_path)
         .stdin(Stdio::piped())
@@ -2546,7 +2717,7 @@ fn replace_file(temp_path: &Path, target_path: &Path) -> Result<(), AppCommandEr
 
 #[cfg(unix)]
 fn sync_directory(path: &Path) -> Result<(), AppCommandError> {
-    let dir = File::open(path).map_err(AppCommandError::io)?;
+    let dir = std::fs::File::open(path).map_err(AppCommandError::io)?;
     dir.sync_all().map_err(AppCommandError::io)
 }
 

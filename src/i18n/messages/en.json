@@ -57,6 +57,27 @@
       "clone": "Clone"
     }
   },
+  "GitCredentialDialog": {
+    "title": "Authentication Required",
+    "description": "The remote server requires credentials. Enter your username and password (or personal access token).",
+    "username": "Username",
+    "usernamePlaceholder": "Username or email",
+    "password": "Password / Token",
+    "passwordPlaceholder": "Password or personal access token",
+    "passwordHint": "For non-GitHub servers, enter your username and password.",
+    "cancel": "Cancel",
+    "authenticate": "Authenticate",
+    "authenticating": "Authenticating...",
+    "invalidCredentials": "Invalid credentials. Please try again.",
+    "saveCredentials": "Save credentials for future operations",
+    "githubTitle": "GitHub Authentication",
+    "githubDescription": "Enter a personal access token to authenticate with GitHub. The token will be validated and saved to your accounts.",
+    "githubToken": "Personal Access Token",
+    "githubTokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "githubTokenHint": "Generate a token at GitHub → Settings → Developer settings → Personal access tokens.",
+    "githubAuthenticate": "Validate & Connect",
+    "generateToken": "Generate token"
+  },
   "SettingsShell": {
     "title": "Settings",
     "preferences": "Preferences",
@@ -66,6 +87,7 @@
       "mcp": "MCP",
       "skills": "Skills",
       "shortcuts": "Shortcuts",
+      "version_control": "Version Control",
       "system": "System"
     }
   },
@@ -126,6 +148,75 @@
       "downloadFailed": "Failed to download update package. Please try again later.",
       "installFailed": "Failed to install update. Please close the app and try again.",
       "unknown": "Update failed. Please try again later."
+    }
+  },
+  "VersionControlSettings": {
+    "loading": "Loading...",
+    "sectionTitle": "Version Control",
+    "sectionDescription": "Configure Git executable and manage GitHub accounts.",
+    "gitTitle": "Git Configuration",
+    "gitDescription": "Configure the Git executable used by the application.",
+    "gitDetected": "Git detected",
+    "gitNotFound": "Git not found on this system",
+    "gitVersion": "Version",
+    "gitPath": "Path",
+    "customGitPath": "Custom Git Path",
+    "customGitPathPlaceholder": "/usr/bin/git",
+    "customGitPathHint": "Leave empty to use the auto-detected path.",
+    "test": "Test",
+    "testing": "Testing...",
+    "testSuccess": "Git executable is valid.",
+    "testFailed": "Git test failed: {message}",
+    "save": "Save",
+    "saving": "Saving...",
+    "saveSuccess": "Git settings saved.",
+    "saveFailed": "Failed to save: {message}",
+    "githubTitle": "GitHub Accounts",
+    "githubDescription": "Manage GitHub accounts for authentication. Tokens are stored locally.",
+    "noAccounts": "No GitHub accounts configured.",
+    "addAccount": "Add Account",
+    "serverUrl": "Server URL",
+    "serverUrlPlaceholder": "https://github.com",
+    "token": "Personal Access Token",
+    "tokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "generateToken": "Generate token",
+    "tokenHint": "Generate a token at GitHub → Settings → Developer settings → Personal access tokens.",
+    "validateAndAdd": "Validate & Add",
+    "validating": "Validating...",
+    "addSuccess": "Account {username} added successfully.",
+    "addFailed": "Failed to add account: {message}",
+    "testConnection": "Test",
+    "connectionSuccess": "Connection successful.",
+    "connectionFailed": "Connection failed: {message}",
+    "setDefault": "Set Default",
+    "defaultLabel": "Default",
+    "defaultSet": "Default account updated.",
+    "removeAccount": "Remove",
+    "removeConfirmTitle": "Remove Account",
+    "removeConfirmMessage": "Are you sure you want to remove the account \"{username}\"?",
+    "removeConfirm": "Remove",
+    "removeCancel": "Cancel",
+    "removeSuccess": "Account removed.",
+    "scopes": "Scopes",
+    "loadFailed": "Failed to load settings: {message}",
+    "gitAccount": {
+      "sectionTitle": "Git Accounts",
+      "sectionDescription": "Manage credentials for non-GitHub Git servers (GitLab, Bitbucket, self-hosted, etc.).",
+      "noAccounts": "No Git server accounts configured.",
+      "addAccount": "Add Account",
+      "addTitle": "Add Git Account",
+      "addDescription": "Enter the server address, username, and password or access token.",
+      "serverUrl": "Server URL",
+      "serverUrlPlaceholder": "https://gitlab.example.com",
+      "username": "Username",
+      "usernamePlaceholder": "Username or email",
+      "password": "Password / Token",
+      "passwordPlaceholder": "Password or access token",
+      "passwordHint": "Enter your password or a personal access token for the server.",
+      "add": "Add",
+      "serverRequired": "Server URL is required.",
+      "usernameRequired": "Username is required.",
+      "passwordRequired": "Password is required."
     }
   },
   "ShortcutSettings": {
@@ -587,7 +678,8 @@
       "create": "Create",
       "createAndSwitch": "Create and Switch",
       "openFile": "Open File",
-      "viewDiff": "View Diff"
+      "viewDiff": "View Diff",
+      "push": "Push..."
     },
     "modes": {
       "conversation": "Conversation Mode",
@@ -783,6 +875,7 @@
     "branchDropdown": {
       "toasts": {
         "commitCodeCompleted": "Code commit completed",
+        "pushCodeCompleted": "Code push completed",
         "committedFiles": "Committed {count, plural, one {# file} other {# files}}",
         "taskCompleted": "{label} completed",
         "taskFailed": "{label} failed",
@@ -791,6 +884,7 @@
         "allFilesUpToDate": "All files are up to date",
         "updatedFiles": "Updated {count, plural, one {# file} other {# files}}",
         "openCommitWindowFailed": "Failed to open commit window",
+        "openPushWindowFailed": "Failed to open push window",
         "upstreamSet": "Upstream branch has been set",
         "upstreamSetAndPushed": "Upstream branch set and pushed {count, plural, one {# commit} other {# commits}}",
         "noCommitsToPush": "No commits to push",
@@ -941,6 +1035,23 @@
       "clickFileToDiff": "Click a file name to view diff",
       "loadingDiff": "Loading diff..."
     },
+    "pushWindow": {
+      "title": "Push Code",
+      "noUnpushedCommits": "No unpushed commits",
+      "unpushed": "Unpushed",
+      "selectFileToViewDiff": "Select a file to view diff",
+      "before": "Before",
+      "after": "After",
+      "push": "Push",
+      "toasts": {
+        "pushSuccess": "Push successful",
+        "pushFailed": "Push failed",
+        "upstreamSet": "Upstream branch has been set",
+        "upstreamSetAndPushed": "Upstream branch set and pushed {count, plural, one {# commit} other {# commits}}",
+        "noCommitsToPush": "No commits to push",
+        "pushedCommits": "Pushed {count, plural, one {# commit} other {# commits}}"
+      }
+    },
     "gitLogTab": {
       "filesTitle": "Files",
       "expandAllFiles": "Expand all files",
@@ -974,7 +1085,8 @@
       "toasts": {
         "createdAndSwitchedNewBranch": "Created and switched to new branch",
         "newBranchFromCommit": "{name} (from {shortHash})",
-        "createBranchFailed": "Failed to create branch"
+        "createBranchFailed": "Failed to create branch",
+        "openPushWindowFailed": "Failed to open push window"
       },
       "branchSelector": {
         "selectBranchPlaceholder": "Select branch...",
@@ -1001,7 +1113,8 @@
       "actions": {
         "commitCode": "Commit code",
         "rollback": "Rollback",
-        "addToVcs": "Add to VCS"
+        "addToVcs": "Add to VCS",
+        "delete": "Delete"
       },
       "toasts": {
         "noAddableFilesInDir": "No changed files in this directory can be added to VCS",
@@ -1012,11 +1125,16 @@
         "rolledBack": "Rolled back {name}",
         "rollbackFailed": "Rollback failed",
         "addedFilesToVcs": "Added {count, plural, one {# file} other {# files}} to VCS",
-        "rolledBackFiles": "Rolled back {count, plural, one {# file} other {# files}}"
+        "rolledBackFiles": "Rolled back {count, plural, one {# file} other {# files}}",
+        "deleted": "Deleted {name}",
+        "deleteFailed": "Delete failed",
+        "deletedFiles": "Deleted {count, plural, one {# file} other {# files}}",
+        "noDeletableFilesInDir": "No changed files in this directory can be deleted"
       },
       "directoryDialog": {
         "descriptionAdd": "Select files under directory {path} to add to VCS.",
         "descriptionRollback": "Select files under directory {path} to roll back.",
+        "descriptionDelete": "Select files under directory {path} to delete. This action cannot be undone.",
         "descriptionFallback": "Select files to proceed.",
         "selectionCount": "Selected {selected} / {total} files",
         "selectAll": "Select all",
@@ -1028,6 +1146,13 @@
         "title": "Confirm rollback",
         "descriptionWithTarget": "Roll back local changes for {kind} \"{name}\"?",
         "descriptionFallback": "Roll back local changes?",
+        "kindDirectory": "directory",
+        "kindFile": "file"
+      },
+      "deleteConfirm": {
+        "title": "Confirm deletion",
+        "descriptionWithTarget": "Delete {kind} \"{name}\"? This action cannot be undone.",
+        "descriptionFallback": "This action cannot be undone.",
         "kindDirectory": "directory",
         "kindFile": "file"
       }
@@ -1207,7 +1332,8 @@
         "autoLinkPreflightFailed": "Auto-link preflight failed: {message}",
         "connectFailedTitle": "{agent} connection failed",
         "toolFallbackTitle": "Tool",
-        "eventErrorTitle": "Agent Error"
+        "eventErrorTitle": "Agent Error",
+        "notificationTurnComplete": "{agent} has finished responding"
       },
       "connectionLifecycle": {
         "tasks": {

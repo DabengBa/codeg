@@ -13,6 +13,7 @@ import { Plus, RefreshCw, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { disposeTauriListener } from "@/lib/tauri-listener"
+import { useAcpActions } from "@/contexts/acp-connections-context"
 import { useFolderContext } from "@/contexts/folder-context"
 import { useTabContext } from "@/contexts/tab-context"
 import { useSessionStats } from "@/contexts/session-stats-context"
@@ -208,6 +209,10 @@ const ConversationTabView = memo(function ConversationTabView({
   const statusUpdatedRef = useRef(false)
   const selectedAgentRef = useRef(selectedAgent)
   const createConversationPendingRef = useRef(false)
+  // When the turn finishes (cancel / complete) before createConversation
+  // resolves, we can't update the DB status yet.  This ref records the
+  // desired status so the createConversation callback can apply it.
+  const deferredStatusRef = useRef<string | null>(null)
   const externalIdSavedRef = useRef(false)
   const sessionIdRef = useRef<string | null>(null)
   const syncCancelRef = useRef<(() => void) | null>(null)
@@ -332,8 +337,21 @@ const ConversationTabView = memo(function ConversationTabView({
     syncCancelRef.current?.()
     syncCancelRef.current = null
 
+    const targetStatus =
+      connStatus === "disconnected" || connStatus === "error"
+        ? null
+        : "pending_review"
+
     const persistedId = dbConvIdRef.current
-    if (!persistedId) return
+    if (!persistedId) {
+      // Conversation hasn't been persisted yet (createConversation still
+      // in flight).  Record the desired status so the create callback
+      // can apply it once the DB row exists.
+      if (targetStatus) {
+        deferredStatusRef.current = targetStatus
+      }
+      return
+    }
 
     // Async patch metadata (usage, duration_ms, model, session_stats)
     if (persistedId > 0) {
@@ -343,8 +361,8 @@ const ConversationTabView = memo(function ConversationTabView({
       )
     }
 
-    if (connStatus !== "disconnected" && connStatus !== "error") {
-      updateConversationStatus(persistedId, "pending_review")
+    if (targetStatus) {
+      updateConversationStatus(persistedId, targetStatus)
         .then(() => refreshConversations())
         .catch((e: unknown) =>
           console.error("[ConversationTabView] update status:", e)
@@ -572,7 +590,12 @@ const ConversationTabView = memo(function ConversationTabView({
             buildConversationDraftStorageKey(selectedAgent, newConversationId)
           )
           statusUpdatedRef.current = false
-          updateConversationStatus(newConversationId, "in_progress")
+          // If the turn already finished while we were creating the
+          // conversation, apply the deferred status directly instead
+          // of setting "in_progress" (which would never be updated).
+          const initialStatus = deferredStatusRef.current ?? "in_progress"
+          deferredStatusRef.current = null
+          updateConversationStatus(newConversationId, initialStatus)
             .then(() => refreshConversations())
             .catch((e: unknown) =>
               console.error("[ConversationTabView] update status:", e)
@@ -693,6 +716,12 @@ const ConversationTabView = memo(function ConversationTabView({
       setDraftAgentType(nextAgentType)
       setModeId(null)
       setAgentConnectError(null)
+
+      // If not yet connected, just update state — auto-connect will use the
+      // new agentType once canAutoConnect is satisfied.
+      const s = connStatusRef.current
+      if (!s || s === "disconnected" || s === "error") return
+
       connDisconnect()
         .catch((e) =>
           console.error("[ConversationTabView] disconnect old agent:", e)
@@ -941,7 +970,9 @@ export function ConversationDetailPanel() {
     openNewConversationTab,
     closeTab,
     switchTab,
+    onPreviewTabReplaced,
   } = useTabContext()
+  const { disconnect: disconnectByKey } = useAcpActions()
   const [reloadByTabId, setReloadByTabId] = useState<Record<string, number>>({})
   const tabsRef = useRef(tabs)
   const conversationsRef = useRef(conversations)
@@ -954,7 +985,40 @@ export function ConversationDetailPanel() {
     conversationsRef.current = conversations
   }, [conversations])
 
-  // Background turn_complete handler: for conversations not open in tabs
+  // Disconnect the old connection immediately when a preview tab is replaced
+  useEffect(() => {
+    return onPreviewTabReplaced((replacedTabId) => {
+      disconnectByKey(replacedTabId).catch(() => {})
+    })
+  }, [onPreviewTabReplaced, disconnectByKey])
+
+  // Refs for background turn_complete handler so the listener
+  // can be registered once and always read the latest values.
+  const getConversationIdByExternalIdRef = useRef(getConversationIdByExternalId)
+  const getSessionRef = useRef(getSession)
+  const runtimeCompleteTurnRef = useRef(runtimeCompleteTurn)
+  const runtimeRemoveConversationRef = useRef(runtimeRemoveConversation)
+  const refreshConversationsRef = useRef(refreshConversations)
+  useEffect(() => {
+    getConversationIdByExternalIdRef.current = getConversationIdByExternalId
+  }, [getConversationIdByExternalId])
+  useEffect(() => {
+    getSessionRef.current = getSession
+  }, [getSession])
+  useEffect(() => {
+    runtimeCompleteTurnRef.current = runtimeCompleteTurn
+  }, [runtimeCompleteTurn])
+  useEffect(() => {
+    runtimeRemoveConversationRef.current = runtimeRemoveConversation
+  }, [runtimeRemoveConversation])
+  useEffect(() => {
+    refreshConversationsRef.current = refreshConversations
+  }, [refreshConversations])
+
+  // Background turn_complete handler: for conversations not open in tabs.
+  // Registered once — uses refs to avoid re-creating the listener on every
+  // state change, which would cause "Couldn't find callback id" warnings
+  // due to the async gap between unlisten and the new listen().
   useEffect(() => {
     let cancelled = false
     let unlisten: (() => void | Promise<void>) | null = null
@@ -965,9 +1029,8 @@ export function ConversationDetailPanel() {
           const payload = event.payload
           if (payload.type !== "turn_complete") return
 
-          const runtimeConversationId = getConversationIdByExternalId(
-            payload.session_id
-          )
+          const runtimeConversationId =
+            getConversationIdByExternalIdRef.current(payload.session_id)
           const summary = conversationsRef.current.find(
             (item) => item.external_id === payload.session_id
           )
@@ -987,12 +1050,12 @@ export function ConversationDetailPanel() {
           if (isOpenInTabs) return
 
           // Promote liveMessage + optimisticTurns to localTurns immediately
-          runtimeCompleteTurn(matchedConversationId)
+          runtimeCompleteTurnRef.current(matchedConversationId)
 
           // If tab was closed while agent was responding, clean up now
-          const session = getSession(matchedConversationId)
+          const session = getSessionRef.current(matchedConversationId)
           if (session?.pendingCleanup) {
-            runtimeRemoveConversation(matchedConversationId)
+            runtimeRemoveConversationRef.current(matchedConversationId)
           }
 
           // Update conversation status — use the DB summary (found by
@@ -1003,7 +1066,7 @@ export function ConversationDetailPanel() {
             (matchedConversationId > 0 ? matchedConversationId : null)
           if (dbId && (!summary || summary.status === "in_progress")) {
             updateConversationStatus(dbId, "pending_review")
-              .then(() => refreshConversations())
+              .then(() => refreshConversationsRef.current())
               .catch((error: unknown) =>
                 console.error(
                   "[ConversationDetailPanel] background update status:",
@@ -1034,13 +1097,7 @@ export function ConversationDetailPanel() {
         "ConversationDetailPanel.backgroundRefresh"
       )
     }
-  }, [
-    getConversationIdByExternalId,
-    getSession,
-    runtimeCompleteTurn,
-    runtimeRemoveConversation,
-    refreshConversations,
-  ])
+  }, [])
 
   const hasNoTabs = tabs.length === 0 && !activeTabId
   const activeConversationTab = useMemo(
@@ -1061,7 +1118,7 @@ export function ConversationDetailPanel() {
 
   const handleNewConversation = useCallback(() => {
     if (!folder) return
-    openNewConversationTab("codex", folder.path)
+    openNewConversationTab(folder.path)
   }, [folder, openNewConversationTab])
 
   const handleCloseActiveTab = useCallback(() => {
@@ -1074,18 +1131,9 @@ export function ConversationDetailPanel() {
     if (!folder) return
 
     if (hasNoTabs) {
-      openNewConversationTab(
-        newConversation?.agentType ?? "codex",
-        newConversation?.workingDir ?? folder.path
-      )
+      openNewConversationTab(newConversation?.workingDir ?? folder.path)
     }
-  }, [
-    folder,
-    hasNoTabs,
-    newConversation?.agentType,
-    newConversation?.workingDir,
-    openNewConversationTab,
-  ])
+  }, [folder, hasNoTabs, newConversation?.workingDir, openNewConversationTab])
 
   const canTile = isTileMode && tabs.length > 1
 

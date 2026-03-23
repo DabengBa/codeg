@@ -57,6 +57,27 @@
       "clone": "クローン"
     }
   },
+  "GitCredentialDialog": {
+    "title": "認証が必要です",
+    "description": "リモートサーバーが認証情報を要求しています。ユーザー名とパスワード（またはアクセストークン）を入力してください。",
+    "username": "ユーザー名",
+    "usernamePlaceholder": "ユーザー名またはメールアドレス",
+    "password": "パスワード / トークン",
+    "passwordPlaceholder": "パスワードまたはアクセストークン",
+    "passwordHint": "サーバーのユーザー名とパスワードを入力してください。",
+    "cancel": "キャンセル",
+    "authenticate": "認証",
+    "authenticating": "認証中...",
+    "invalidCredentials": "認証情報が無効です。再試行してください。",
+    "saveCredentials": "今後の操作のために認証情報を保存する",
+    "githubTitle": "GitHub 認証",
+    "githubDescription": "個人アクセストークンを入力して GitHub に接続します。トークン検証後、自動的にアカウントに保存されます。",
+    "githubToken": "個人アクセストークン",
+    "githubTokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "githubTokenHint": "GitHub → Settings → Developer settings → Personal access tokens でトークンを生成してください。",
+    "githubAuthenticate": "検証して接続",
+    "generateToken": "トークンを生成"
+  },
   "SettingsShell": {
     "title": "設定",
     "preferences": "環境設定",
@@ -66,6 +87,7 @@
       "mcp": "MCP",
       "skills": "Skills",
       "shortcuts": "ショートカット",
+      "version_control": "バージョン管理",
       "system": "システム"
     }
   },
@@ -126,6 +148,75 @@
       "downloadFailed": "更新パッケージのダウンロードに失敗しました。しばらくしてから再試行してください。",
       "installFailed": "更新のインストールに失敗しました。アプリを閉じて再試行してください。",
       "unknown": "更新に失敗しました。しばらくしてから再試行してください。"
+    }
+  },
+  "VersionControlSettings": {
+    "loading": "読み込み中...",
+    "sectionTitle": "バージョン管理",
+    "sectionDescription": "Git 実行ファイルの設定と GitHub アカウントの管理。",
+    "gitTitle": "Git 設定",
+    "gitDescription": "アプリケーションで使用する Git 実行ファイルを設定します。",
+    "gitDetected": "Git が検出されました",
+    "gitNotFound": "システムに Git が見つかりません",
+    "gitVersion": "バージョン",
+    "gitPath": "パス",
+    "customGitPath": "カスタム Git パス",
+    "customGitPathPlaceholder": "/usr/bin/git",
+    "customGitPathHint": "空欄の場合、自動検出されたパスを使用します。",
+    "test": "テスト",
+    "testing": "テスト中...",
+    "testSuccess": "Git 実行ファイルは有効です。",
+    "testFailed": "Git テスト失敗：{message}",
+    "save": "保存",
+    "saving": "保存中...",
+    "saveSuccess": "Git 設定を保存しました。",
+    "saveFailed": "保存に失敗しました：{message}",
+    "githubTitle": "GitHub アカウント",
+    "githubDescription": "認証用の GitHub アカウントを管理します。トークンはローカルに保存されます。",
+    "noAccounts": "GitHub アカウントが設定されていません。",
+    "addAccount": "アカウントを追加",
+    "serverUrl": "サーバー URL",
+    "serverUrlPlaceholder": "https://github.com",
+    "token": "個人アクセストークン",
+    "tokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "generateToken": "トークンを生成",
+    "tokenHint": "GitHub → Settings → Developer settings → Personal access tokens でトークンを生成してください。",
+    "validateAndAdd": "検証して追加",
+    "validating": "検証中...",
+    "addSuccess": "アカウント {username} を追加しました。",
+    "addFailed": "アカウントの追加に失敗しました：{message}",
+    "testConnection": "テスト",
+    "connectionSuccess": "接続成功。",
+    "connectionFailed": "接続失敗：{message}",
+    "setDefault": "デフォルトに設定",
+    "defaultLabel": "デフォルト",
+    "defaultSet": "デフォルトアカウントを更新しました。",
+    "removeAccount": "削除",
+    "removeConfirmTitle": "アカウントを削除",
+    "removeConfirmMessage": "アカウント「{username}」を削除してもよろしいですか？",
+    "removeConfirm": "削除",
+    "removeCancel": "キャンセル",
+    "removeSuccess": "アカウントを削除しました。",
+    "scopes": "スコープ",
+    "loadFailed": "設定の読み込みに失敗しました：{message}",
+    "gitAccount": {
+      "sectionTitle": "Git サーバーアカウント",
+      "sectionDescription": "GitHub 以外の Git サーバーの認証情報を管理します（GitLab、Bitbucket、セルフホストなど）。",
+      "noAccounts": "Git サーバーアカウントが設定されていません。",
+      "addAccount": "アカウントを追加",
+      "addTitle": "Git アカウントを追加",
+      "addDescription": "サーバーアドレス、ユーザー名、パスワードまたはアクセストークンを入力してください。",
+      "serverUrl": "サーバー URL",
+      "serverUrlPlaceholder": "https://gitlab.example.com",
+      "username": "ユーザー名",
+      "usernamePlaceholder": "ユーザー名またはメールアドレス",
+      "password": "パスワード / トークン",
+      "passwordPlaceholder": "パスワードまたはアクセストークン",
+      "passwordHint": "サーバーのパスワードまたはアクセストークンを入力してください。",
+      "add": "追加",
+      "serverRequired": "サーバー URL を入力してください。",
+      "usernameRequired": "ユーザー名を入力してください。",
+      "passwordRequired": "パスワードを入力してください。"
     }
   },
   "ShortcutSettings": {
@@ -587,7 +678,8 @@
       "create": "作成",
       "createAndSwitch": "作成して切り替え",
       "openFile": "ファイルを開く",
-      "viewDiff": "差分を見る"
+      "viewDiff": "差分を見る",
+      "push": "プッシュ..."
     },
     "modes": {
       "conversation": "会話モード",
@@ -783,6 +875,7 @@
     "branchDropdown": {
       "toasts": {
         "commitCodeCompleted": "コードコミットが完了しました",
+        "pushCodeCompleted": "コードプッシュが完了しました",
         "committedFiles": "{count, plural, one {# 個のファイルをコミット} other {# 個のファイルをコミット}}",
         "taskCompleted": "{label} が完了しました",
         "taskFailed": "{label} が失敗しました",
@@ -791,6 +884,7 @@
         "allFilesUpToDate": "すべてのファイルは最新です",
         "updatedFiles": "{count, plural, one {# 個のファイルを更新} other {# 個のファイルを更新}}",
         "openCommitWindowFailed": "コミットウィンドウを開けませんでした",
+        "openPushWindowFailed": "プッシュウィンドウを開けませんでした",
         "upstreamSet": "アップストリームブランチを設定しました",
         "upstreamSetAndPushed": "アップストリームブランチを設定し、{count, plural, one {# 件のコミット} other {# 件のコミット}}をプッシュしました",
         "noCommitsToPush": "プッシュするコミットはありません",
@@ -941,6 +1035,23 @@
       "clickFileToDiff": "ファイル名をクリックして差分を表示",
       "loadingDiff": "差分を読み込み中..."
     },
+    "pushWindow": {
+      "title": "コードをプッシュ",
+      "noUnpushedCommits": "未プッシュのコミットはありません",
+      "unpushed": "未プッシュ",
+      "selectFileToViewDiff": "ファイルを選択して差分を表示",
+      "before": "変更前",
+      "after": "変更後",
+      "push": "プッシュ",
+      "toasts": {
+        "pushSuccess": "プッシュ成功",
+        "pushFailed": "プッシュ失敗",
+        "upstreamSet": "リモート追跡ブランチが設定されました",
+        "upstreamSetAndPushed": "リモート追跡ブランチを設定し、{count}件のコミットをプッシュしました",
+        "noCommitsToPush": "プッシュするコミットはありません",
+        "pushedCommits": "{count}件のコミットをプッシュしました"
+      }
+    },
     "gitLogTab": {
       "filesTitle": "ファイル",
       "expandAllFiles": "すべてのファイルを展開",
@@ -974,7 +1085,8 @@
       "toasts": {
         "createdAndSwitchedNewBranch": "新しいブランチを作成して切り替えました",
         "newBranchFromCommit": "{name}（{shortHash} から）",
-        "createBranchFailed": "ブランチ作成に失敗しました"
+        "createBranchFailed": "ブランチ作成に失敗しました",
+        "openPushWindowFailed": "プッシュウィンドウを開けませんでした"
       },
       "branchSelector": {
         "selectBranchPlaceholder": "ブランチを選択...",
@@ -1001,7 +1113,8 @@
       "actions": {
         "commitCode": "コードをコミット",
         "rollback": "ロールバック",
-        "addToVcs": "VCS に追加"
+        "addToVcs": "VCS に追加",
+        "delete": "削除"
       },
       "toasts": {
         "noAddableFilesInDir": "このディレクトリには VCS に追加できる変更ファイルがありません",
@@ -1012,11 +1125,16 @@
         "rolledBack": "{name} をロールバックしました",
         "rollbackFailed": "ロールバックに失敗しました",
         "addedFilesToVcs": "{count, plural, one {# 個のファイルを VCS に追加} other {# 個のファイルを VCS に追加}}",
-        "rolledBackFiles": "{count, plural, one {# 個のファイルをロールバック} other {# 個のファイルをロールバック}}"
+        "rolledBackFiles": "{count, plural, one {# 個のファイルをロールバック} other {# 個のファイルをロールバック}}",
+        "deleted": "{name} を削除しました",
+        "deleteFailed": "削除に失敗しました",
+        "deletedFiles": "{count} 個のファイルを削除しました",
+        "noDeletableFilesInDir": "このディレクトリには削除可能な変更ファイルがありません"
       },
       "directoryDialog": {
         "descriptionAdd": "ディレクトリ {path} 配下で VCS に追加するファイルを選択してください。",
         "descriptionRollback": "ディレクトリ {path} 配下でロールバックするファイルを選択してください。",
+        "descriptionDelete": "ディレクトリ {path} 配下で削除するファイルを選択してください。この操作は元に戻せません。",
         "descriptionFallback": "続行するファイルを選択してください。",
         "selectionCount": "{selected} / {total} を選択",
         "selectAll": "すべて選択",
@@ -1028,6 +1146,13 @@
         "title": "ロールバックの確認",
         "descriptionWithTarget": "{kind} \"{name}\" のローカル変更をロールバックしますか？",
         "descriptionFallback": "ローカル変更をロールバックしますか？",
+        "kindDirectory": "ディレクトリ",
+        "kindFile": "ファイル"
+      },
+      "deleteConfirm": {
+        "title": "削除の確認",
+        "descriptionWithTarget": "{kind}「{name}」を削除しますか？この操作は元に戻せません。",
+        "descriptionFallback": "この操作は元に戻せません。",
         "kindDirectory": "ディレクトリ",
         "kindFile": "ファイル"
       }
@@ -1207,7 +1332,8 @@
         "autoLinkPreflightFailed": "自動リンクの事前チェックに失敗しました: {message}",
         "connectFailedTitle": "{agent} の接続に失敗しました",
         "toolFallbackTitle": "ツール",
-        "eventErrorTitle": "エージェントエラー"
+        "eventErrorTitle": "エージェントエラー",
+        "notificationTurnComplete": "{agent} の応答が完了しました"
       },
       "connectionLifecycle": {
         "tasks": {

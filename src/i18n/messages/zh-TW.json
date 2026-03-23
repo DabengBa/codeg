@@ -57,6 +57,27 @@
       "clone": "複製"
     }
   },
+  "GitCredentialDialog": {
+    "title": "需要身份驗證",
+    "description": "遠端伺服器要求輸入憑據。請輸入使用者名稱和密碼（或個人存取權杖）。",
+    "username": "使用者名稱",
+    "usernamePlaceholder": "使用者名稱或電子郵件",
+    "password": "密碼 / 權杖",
+    "passwordPlaceholder": "密碼或個人存取權杖",
+    "passwordHint": "請輸入伺服器的使用者名稱和密碼。",
+    "cancel": "取消",
+    "authenticate": "驗證",
+    "authenticating": "驗證中...",
+    "invalidCredentials": "憑據無效，請重試。",
+    "saveCredentials": "儲存憑據以供後續操作使用",
+    "githubTitle": "GitHub 身份驗證",
+    "githubDescription": "輸入個人存取權杖以連線 GitHub。權杖驗證成功後將自動儲存至帳號列表。",
+    "githubToken": "個人存取權杖",
+    "githubTokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "githubTokenHint": "在 GitHub → Settings → Developer settings → Personal access tokens 中產生權杖。",
+    "githubAuthenticate": "驗證並連線",
+    "generateToken": "產生權杖"
+  },
   "SettingsShell": {
     "title": "設定",
     "preferences": "偏好設定",
@@ -66,6 +87,7 @@
       "mcp": "MCP",
       "skills": "Skills",
       "shortcuts": "快捷鍵",
+      "version_control": "版本控制",
       "system": "系統"
     }
   },
@@ -126,6 +148,75 @@
       "downloadFailed": "下載更新包失敗，請稍後再試。",
       "installFailed": "安裝更新失敗，請關閉應用後重試。",
       "unknown": "更新失敗，請稍後再試。"
+    }
+  },
+  "VersionControlSettings": {
+    "loading": "載入中...",
+    "sectionTitle": "版本控制",
+    "sectionDescription": "設定 Git 執行檔並管理 GitHub 帳號。",
+    "gitTitle": "Git 設定",
+    "gitDescription": "設定應用程式使用的 Git 執行檔。",
+    "gitDetected": "已偵測到 Git",
+    "gitNotFound": "未在系統中找到 Git",
+    "gitVersion": "版本",
+    "gitPath": "路徑",
+    "customGitPath": "自訂 Git 路徑",
+    "customGitPathPlaceholder": "/usr/bin/git",
+    "customGitPathHint": "留空則使用自動偵測的路徑。",
+    "test": "測試",
+    "testing": "測試中...",
+    "testSuccess": "Git 執行檔有效。",
+    "testFailed": "Git 測試失敗：{message}",
+    "save": "儲存",
+    "saving": "儲存中...",
+    "saveSuccess": "Git 設定已儲存。",
+    "saveFailed": "儲存失敗：{message}",
+    "githubTitle": "GitHub 帳號",
+    "githubDescription": "管理用於身份驗證的 GitHub 帳號。權杖儲存在本機。",
+    "noAccounts": "尚未設定 GitHub 帳號。",
+    "addAccount": "新增帳號",
+    "serverUrl": "伺服器網址",
+    "serverUrlPlaceholder": "https://github.com",
+    "token": "個人存取權杖",
+    "tokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "generateToken": "產生權杖",
+    "tokenHint": "在 GitHub → Settings → Developer settings → Personal access tokens 中產生權杖。",
+    "validateAndAdd": "驗證並新增",
+    "validating": "驗證中...",
+    "addSuccess": "帳號 {username} 新增成功。",
+    "addFailed": "新增帳號失敗：{message}",
+    "testConnection": "測試",
+    "connectionSuccess": "連線成功。",
+    "connectionFailed": "連線失敗：{message}",
+    "setDefault": "設為預設",
+    "defaultLabel": "預設",
+    "defaultSet": "預設帳號已更新。",
+    "removeAccount": "刪除",
+    "removeConfirmTitle": "刪除帳號",
+    "removeConfirmMessage": "確定要刪除帳號「{username}」嗎？",
+    "removeConfirm": "刪除",
+    "removeCancel": "取消",
+    "removeSuccess": "帳號已刪除。",
+    "scopes": "權限範圍",
+    "loadFailed": "載入設定失敗：{message}",
+    "gitAccount": {
+      "sectionTitle": "Git 伺服器帳號",
+      "sectionDescription": "管理非 GitHub 的 Git 伺服器憑據（GitLab、Bitbucket、自建服務等）。",
+      "noAccounts": "尚未設定 Git 伺服器帳號。",
+      "addAccount": "新增帳號",
+      "addTitle": "新增 Git 帳號",
+      "addDescription": "輸入伺服器網址、使用者名稱和密碼或存取權杖。",
+      "serverUrl": "伺服器網址",
+      "serverUrlPlaceholder": "https://gitlab.example.com",
+      "username": "使用者名稱",
+      "usernamePlaceholder": "使用者名稱或電子郵件",
+      "password": "密碼 / 權杖",
+      "passwordPlaceholder": "密碼或存取權杖",
+      "passwordHint": "輸入伺服器的密碼或個人存取權杖。",
+      "add": "新增",
+      "serverRequired": "請輸入伺服器網址。",
+      "usernameRequired": "請輸入使用者名稱。",
+      "passwordRequired": "請輸入密碼。"
     }
   },
   "ShortcutSettings": {
@@ -587,7 +678,8 @@
       "create": "建立",
       "createAndSwitch": "建立並切換",
       "openFile": "打開檔案",
-      "viewDiff": "查看差異"
+      "viewDiff": "查看差異",
+      "push": "推送..."
     },
     "modes": {
       "conversation": "會話模式",
@@ -783,6 +875,7 @@
     "branchDropdown": {
       "toasts": {
         "commitCodeCompleted": "提交程式碼完成",
+        "pushCodeCompleted": "推送程式碼完成",
         "committedFiles": "已提交 {count} 個檔案",
         "taskCompleted": "{label} 完成",
         "taskFailed": "{label} 失敗",
@@ -791,6 +884,7 @@
         "allFilesUpToDate": "所有檔案均為最新版本",
         "updatedFiles": "已更新 {count} 個檔案",
         "openCommitWindowFailed": "打開提交視窗失敗",
+        "openPushWindowFailed": "開啟推送視窗失敗",
         "upstreamSet": "已設定遠端追蹤分支",
         "upstreamSetAndPushed": "已設定遠端追蹤分支並推送 {count} 個提交",
         "noCommitsToPush": "沒有可推送的提交",
@@ -941,6 +1035,23 @@
       "clickFileToDiff": "點擊檔案名稱查看差異",
       "loadingDiff": "載入差異中..."
     },
+    "pushWindow": {
+      "title": "推送程式碼",
+      "noUnpushedCommits": "沒有未推送的提交",
+      "unpushed": "未推送",
+      "selectFileToViewDiff": "選擇檔案查看差異",
+      "before": "修改前",
+      "after": "修改後",
+      "push": "推送",
+      "toasts": {
+        "pushSuccess": "推送成功",
+        "pushFailed": "推送失敗",
+        "upstreamSet": "已設定遠端追蹤分支",
+        "upstreamSetAndPushed": "已設定遠端追蹤分支並推送 {count} 個提交",
+        "noCommitsToPush": "沒有可推送的提交",
+        "pushedCommits": "已推送 {count} 個提交"
+      }
+    },
     "gitLogTab": {
       "filesTitle": "檔案",
       "expandAllFiles": "展開全部檔案",
@@ -974,7 +1085,8 @@
       "toasts": {
         "createdAndSwitchedNewBranch": "已建立並切換到新分支",
         "newBranchFromCommit": "{name}（來自 {shortHash}）",
-        "createBranchFailed": "新增分支失敗"
+        "createBranchFailed": "新增分支失敗",
+        "openPushWindowFailed": "開啟推送視窗失敗"
       },
       "branchSelector": {
         "selectBranchPlaceholder": "選擇分支...",
@@ -1001,7 +1113,8 @@
       "actions": {
         "commitCode": "提交程式碼",
         "rollback": "回滾",
-        "addToVcs": "加入到 VCS"
+        "addToVcs": "加入到 VCS",
+        "delete": "刪除"
       },
       "toasts": {
         "noAddableFilesInDir": "該目錄下沒有可加入到 VCS 的變更檔案",
@@ -1012,11 +1125,16 @@
         "rolledBack": "已回滾 {name}",
         "rollbackFailed": "回滾失敗",
         "addedFilesToVcs": "已加入 {count} 個檔案到 VCS",
-        "rolledBackFiles": "已回滾 {count} 個檔案"
+        "rolledBackFiles": "已回滾 {count} 個檔案",
+        "deleted": "已刪除 {name}",
+        "deleteFailed": "刪除失敗",
+        "deletedFiles": "已刪除 {count} 個檔案",
+        "noDeletableFilesInDir": "此目錄下沒有可刪除的變更檔案"
       },
       "directoryDialog": {
         "descriptionAdd": "選擇目錄 {path} 下要加入到 VCS 的檔案。",
         "descriptionRollback": "選擇目錄 {path} 下要回滾的檔案。",
+        "descriptionDelete": "選擇目錄 {path} 下要刪除的檔案。此操作不可撤銷。",
         "descriptionFallback": "選擇要操作的檔案。",
         "selectionCount": "已選擇 {selected} / {total} 個檔案",
         "selectAll": "全選",
@@ -1028,6 +1146,13 @@
         "title": "確認回滾",
         "descriptionWithTarget": "確定回滾{kind}「{name}」的本地修改嗎？",
         "descriptionFallback": "確定回滾本地修改嗎？",
+        "kindDirectory": "目錄",
+        "kindFile": "檔案"
+      },
+      "deleteConfirm": {
+        "title": "確認刪除",
+        "descriptionWithTarget": "確定刪除{kind}「{name}」嗎？此操作無法撤銷。",
+        "descriptionFallback": "此操作無法撤銷。",
         "kindDirectory": "目錄",
         "kindFile": "檔案"
       }
@@ -1207,7 +1332,8 @@
         "autoLinkPreflightFailed": "自動連結預檢查失敗：{message}",
         "connectFailedTitle": "{agent} 連線失敗",
         "toolFallbackTitle": "工具",
-        "eventErrorTitle": "Agent 錯誤"
+        "eventErrorTitle": "Agent 錯誤",
+        "notificationTurnComplete": "{agent} 已完成回應"
       },
       "connectionLifecycle": {
         "tasks": {

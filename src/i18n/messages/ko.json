@@ -57,6 +57,27 @@
       "clone": "클론"
     }
   },
+  "GitCredentialDialog": {
+    "title": "인증 필요",
+    "description": "원격 서버에서 자격 증명을 요구합니다. 사용자 이름과 비밀번호(또는 개인 액세스 토큰)를 입력하세요.",
+    "username": "사용자 이름",
+    "usernamePlaceholder": "사용자 이름 또는 이메일",
+    "password": "비밀번호 / 토큰",
+    "passwordPlaceholder": "비밀번호 또는 개인 액세스 토큰",
+    "passwordHint": "서버의 사용자 이름과 비밀번호를 입력하세요.",
+    "cancel": "취소",
+    "authenticate": "인증",
+    "authenticating": "인증 중...",
+    "invalidCredentials": "자격 증명이 유효하지 않습니다. 다시 시도하세요.",
+    "saveCredentials": "향후 작업을 위해 자격 증명 저장",
+    "githubTitle": "GitHub 인증",
+    "githubDescription": "개인 액세스 토큰을 입력하여 GitHub에 연결합니다. 토큰 확인 후 계정에 자동으로 저장됩니다.",
+    "githubToken": "개인 액세스 토큰",
+    "githubTokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "githubTokenHint": "GitHub → Settings → Developer settings → Personal access tokens에서 토큰을 생성하세요.",
+    "githubAuthenticate": "확인 및 연결",
+    "generateToken": "토큰 생성"
+  },
   "SettingsShell": {
     "title": "설정",
     "preferences": "환경설정",
@@ -66,6 +87,7 @@
       "mcp": "MCP",
       "skills": "Skills",
       "shortcuts": "단축키",
+      "version_control": "버전 관리",
       "system": "시스템"
     }
   },
@@ -126,6 +148,75 @@
       "downloadFailed": "업데이트 패키지 다운로드에 실패했습니다. 잠시 후 다시 시도하세요.",
       "installFailed": "업데이트 설치에 실패했습니다. 앱을 종료한 뒤 다시 시도하세요.",
       "unknown": "업데이트에 실패했습니다. 잠시 후 다시 시도하세요."
+    }
+  },
+  "VersionControlSettings": {
+    "loading": "로딩 중...",
+    "sectionTitle": "버전 관리",
+    "sectionDescription": "Git 실행 파일을 설정하고 GitHub 계정을 관리합니다.",
+    "gitTitle": "Git 설정",
+    "gitDescription": "애플리케이션에서 사용할 Git 실행 파일을 설정합니다.",
+    "gitDetected": "Git이 감지되었습니다",
+    "gitNotFound": "시스템에서 Git을 찾을 수 없습니다",
+    "gitVersion": "버전",
+    "gitPath": "경로",
+    "customGitPath": "사용자 지정 Git 경로",
+    "customGitPathPlaceholder": "/usr/bin/git",
+    "customGitPathHint": "비워두면 자동 감지된 경로를 사용합니다.",
+    "test": "테스트",
+    "testing": "테스트 중...",
+    "testSuccess": "Git 실행 파일이 유효합니다.",
+    "testFailed": "Git 테스트 실패: {message}",
+    "save": "저장",
+    "saving": "저장 중...",
+    "saveSuccess": "Git 설정이 저장되었습니다.",
+    "saveFailed": "저장 실패: {message}",
+    "githubTitle": "GitHub 계정",
+    "githubDescription": "인증용 GitHub 계정을 관리합니다. 토큰은 로컬에 저장됩니다.",
+    "noAccounts": "설정된 GitHub 계정이 없습니다.",
+    "addAccount": "계정 추가",
+    "serverUrl": "서버 URL",
+    "serverUrlPlaceholder": "https://github.com",
+    "token": "개인 액세스 토큰",
+    "tokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "generateToken": "토큰 생성",
+    "tokenHint": "GitHub → Settings → Developer settings → Personal access tokens에서 토큰을 생성하세요.",
+    "validateAndAdd": "검증 및 추가",
+    "validating": "검증 중...",
+    "addSuccess": "계정 {username}이(가) 추가되었습니다.",
+    "addFailed": "계정 추가 실패: {message}",
+    "testConnection": "테스트",
+    "connectionSuccess": "연결 성공.",
+    "connectionFailed": "연결 실패: {message}",
+    "setDefault": "기본값으로 설정",
+    "defaultLabel": "기본",
+    "defaultSet": "기본 계정이 업데이트되었습니다.",
+    "removeAccount": "삭제",
+    "removeConfirmTitle": "계정 삭제",
+    "removeConfirmMessage": "계정 \"{username}\"을(를) 삭제하시겠습니까?",
+    "removeConfirm": "삭제",
+    "removeCancel": "취소",
+    "removeSuccess": "계정이 삭제되었습니다.",
+    "scopes": "범위",
+    "loadFailed": "설정 로드 실패: {message}",
+    "gitAccount": {
+      "sectionTitle": "Git 서버 계정",
+      "sectionDescription": "GitHub 이외의 Git 서버 자격 증명을 관리합니다 (GitLab, Bitbucket, 자체 호스팅 등).",
+      "noAccounts": "설정된 Git 서버 계정이 없습니다.",
+      "addAccount": "계정 추가",
+      "addTitle": "Git 계정 추가",
+      "addDescription": "서버 주소, 사용자 이름, 비밀번호 또는 액세스 토큰을 입력하세요.",
+      "serverUrl": "서버 URL",
+      "serverUrlPlaceholder": "https://gitlab.example.com",
+      "username": "사용자 이름",
+      "usernamePlaceholder": "사용자 이름 또는 이메일",
+      "password": "비밀번호 / 토큰",
+      "passwordPlaceholder": "비밀번호 또는 액세스 토큰",
+      "passwordHint": "서버의 비밀번호 또는 액세스 토큰을 입력하세요.",
+      "add": "추가",
+      "serverRequired": "서버 URL을 입력하세요.",
+      "usernameRequired": "사용자 이름을 입력하세요.",
+      "passwordRequired": "비밀번호를 입력하세요."
     }
   },
   "ShortcutSettings": {
@@ -587,7 +678,8 @@
       "create": "생성",
       "createAndSwitch": "생성 후 전환",
       "openFile": "파일 열기",
-      "viewDiff": "Diff 보기"
+      "viewDiff": "Diff 보기",
+      "push": "푸시..."
     },
     "modes": {
       "conversation": "대화 모드",
@@ -783,6 +875,7 @@
     "branchDropdown": {
       "toasts": {
         "commitCodeCompleted": "코드 커밋이 완료되었습니다",
+        "pushCodeCompleted": "코드 푸시가 완료되었습니다",
         "committedFiles": "{count, plural, one {#개 파일 커밋됨} other {#개 파일 커밋됨}}",
         "taskCompleted": "{label} 완료",
         "taskFailed": "{label} 실패",
@@ -791,6 +884,7 @@
         "allFilesUpToDate": "모든 파일이 최신 상태입니다",
         "updatedFiles": "{count, plural, one {#개 파일 업데이트됨} other {#개 파일 업데이트됨}}",
         "openCommitWindowFailed": "커밋 창을 열지 못했습니다",
+        "openPushWindowFailed": "푸시 창 열기 실패",
         "upstreamSet": "업스트림 브랜치가 설정되었습니다",
         "upstreamSetAndPushed": "업스트림 브랜치를 설정하고 {count, plural, one {#개 커밋} other {#개 커밋}}을 푸시했습니다",
         "noCommitsToPush": "푸시할 커밋이 없습니다",
@@ -941,6 +1035,23 @@
       "clickFileToDiff": "파일 이름을 클릭해 diff를 확인하세요",
       "loadingDiff": "diff 로딩 중..."
     },
+    "pushWindow": {
+      "title": "코드 푸시",
+      "noUnpushedCommits": "푸시되지 않은 커밋이 없습니다",
+      "unpushed": "미푸시",
+      "selectFileToViewDiff": "파일을 선택하여 차이 보기",
+      "before": "변경 전",
+      "after": "변경 후",
+      "push": "푸시",
+      "toasts": {
+        "pushSuccess": "푸시 성공",
+        "pushFailed": "푸시 실패",
+        "upstreamSet": "원격 추적 브랜치가 설정되었습니다",
+        "upstreamSetAndPushed": "원격 추적 브랜치 설정 및 {count}개 커밋 푸시 완료",
+        "noCommitsToPush": "푸시할 커밋이 없습니다",
+        "pushedCommits": "{count}개 커밋 푸시 완료"
+      }
+    },
     "gitLogTab": {
       "filesTitle": "파일",
       "expandAllFiles": "모든 파일 펼치기",
@@ -974,7 +1085,8 @@
       "toasts": {
         "createdAndSwitchedNewBranch": "새 브랜치를 생성하고 전환했습니다",
         "newBranchFromCommit": "{name} ({shortHash}에서 생성)",
-        "createBranchFailed": "브랜치 생성에 실패했습니다"
+        "createBranchFailed": "브랜치 생성에 실패했습니다",
+        "openPushWindowFailed": "푸시 창을 열지 못했습니다"
       },
       "branchSelector": {
         "selectBranchPlaceholder": "브랜치 선택...",
@@ -1001,7 +1113,8 @@
       "actions": {
         "commitCode": "코드 커밋",
         "rollback": "롤백",
-        "addToVcs": "VCS에 추가"
+        "addToVcs": "VCS에 추가",
+        "delete": "삭제"
       },
       "toasts": {
         "noAddableFilesInDir": "이 디렉터리에는 VCS에 추가할 수 있는 변경 파일이 없습니다",
@@ -1012,11 +1125,16 @@
         "rolledBack": "{name}을(를) 롤백했습니다",
         "rollbackFailed": "롤백에 실패했습니다",
         "addedFilesToVcs": "{count, plural, one {#개 파일을 VCS에 추가} other {#개 파일을 VCS에 추가}}",
-        "rolledBackFiles": "{count, plural, one {#개 파일 롤백} other {#개 파일 롤백}}"
+        "rolledBackFiles": "{count, plural, one {#개 파일 롤백} other {#개 파일 롤백}}",
+        "deleted": "{name}이(가) 삭제되었습니다",
+        "deleteFailed": "삭제에 실패했습니다",
+        "deletedFiles": "{count}개 파일을 삭제했습니다",
+        "noDeletableFilesInDir": "이 디렉터리에서 삭제할 수 있는 변경된 파일이 없습니다"
       },
       "directoryDialog": {
         "descriptionAdd": "디렉터리 {path} 아래에서 VCS에 추가할 파일을 선택하세요.",
         "descriptionRollback": "디렉터리 {path} 아래에서 롤백할 파일을 선택하세요.",
+        "descriptionDelete": "디렉터리 {path} 아래에서 삭제할 파일을 선택하세요. 이 작업은 되돌릴 수 없습니다.",
         "descriptionFallback": "계속 진행할 파일을 선택하세요.",
         "selectionCount": "{selected} / {total} 선택됨",
         "selectAll": "모두 선택",
@@ -1028,6 +1146,13 @@
         "title": "롤백 확인",
         "descriptionWithTarget": "{kind} \"{name}\"의 로컬 변경 사항을 롤백할까요?",
         "descriptionFallback": "로컬 변경 사항을 롤백할까요?",
+        "kindDirectory": "디렉터리",
+        "kindFile": "파일"
+      },
+      "deleteConfirm": {
+        "title": "삭제 확인",
+        "descriptionWithTarget": "{kind} \"{name}\"을(를) 삭제할까요? 이 작업은 되돌릴 수 없습니다.",
+        "descriptionFallback": "이 작업은 되돌릴 수 없습니다.",
         "kindDirectory": "디렉터리",
         "kindFile": "파일"
       }
@@ -1207,7 +1332,8 @@
         "autoLinkPreflightFailed": "자동 연결 사전 점검 실패: {message}",
         "connectFailedTitle": "{agent} 연결 실패",
         "toolFallbackTitle": "도구",
-        "eventErrorTitle": "에이전트 오류"
+        "eventErrorTitle": "에이전트 오류",
+        "notificationTurnComplete": "{agent} 응답이 완료되었습니다"
       },
       "connectionLifecycle": {
         "tasks": {

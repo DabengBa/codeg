@@ -42,7 +42,9 @@ import {
   CONNECTION_IDLE_TIMEOUT_MS,
   IDLE_SWEEP_INTERVAL_MS,
 } from "@/lib/constants"
+import { notifyTurnComplete } from "@/lib/notification"
 import { useAlertContext, type AlertAction } from "@/contexts/alert-context"
+import { useFolderContext } from "@/contexts/folder-context"
 
 // ── Shared types (re-exported for consumers) ──
 
@@ -1080,6 +1082,7 @@ export interface AcpActionsValue {
   ): Promise<void>
   setActiveKey(key: string | null): void
   touchActivity(contextKey: string): void
+  registerOpenTabKeys(keys: Set<string>): void
 }
 
 const AcpActionsContext = createContext<AcpActionsValue | null>(null)
@@ -1124,6 +1127,11 @@ function isAlertedError(error: unknown): error is AlertedError {
 export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
   const t = useTranslations("Folder.chat.acpConnections")
   const { pushAlert } = useAlertContext()
+  const { folder } = useFolderContext()
+  const folderNameRef = useRef(folder?.name)
+  useEffect(() => {
+    folderNameRef.current = folder?.name
+  }, [folder?.name])
   const pushAlertRef = useRef(pushAlert)
   useEffect(() => {
     pushAlertRef.current = pushAlert
@@ -1140,8 +1148,13 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
   // connectionId → contextKey reverse mapping
   const reverseMapRef = useRef(new Map<string, string>())
 
+  // Open tab keys — updated by child TabProvider via registerOpenTabKeys
+  const openTabKeysRef = useRef(new Set<string>())
+
   // Guard against concurrent connect() calls
   const connectingKeysRef = useRef(new Set<string>())
+  // Keys whose disconnect was requested while connect was still in flight
+  const abandonedKeysRef = useRef(new Set<string>())
 
   type AutoLinkBlockState =
     | { kind: "none"; reason: "" }
@@ -1298,6 +1311,10 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
 
   const touchActivity = useCallback((contextKey: string) => {
     lastActivityRef.current.set(contextKey, Date.now())
+  }, [])
+
+  const registerOpenTabKeys = useCallback((keys: Set<string>) => {
+    openTabKeysRef.current = keys
   }, [])
 
   const flushStreamingQueue = useCallback(() => {
@@ -1545,6 +1562,19 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
               }
             }
           }
+          // Send OS notification when window is not focused
+          {
+            const nc = storeRef.current.connections.get(contextKey)
+            if (nc) {
+              const agentLabel = AGENT_LABELS[nc.agentType]
+              const fn = folderNameRef.current
+              const title = fn ? `${fn} - Codeg` : "Codeg"
+              notifyTurnComplete(
+                title,
+                t("notificationTurnComplete", { agent: agentLabel })
+              ).catch(() => {})
+            }
+          }
           break
         }
         case "error":
@@ -1627,9 +1657,11 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
       const now = Date.now()
       const currentActiveKey = storeRef.current.activeKey
 
+      const currentOpenTabKeys = openTabKeysRef.current
       const toDisconnect: { contextKey: string; connectionId: string }[] = []
       for (const [contextKey, conn] of storeRef.current.connections) {
         if (contextKey === currentActiveKey) continue
+        if (currentOpenTabKeys.has(contextKey)) continue
         if (
           conn.status === "prompting" ||
           conn.status === "connecting" ||
@@ -1752,6 +1784,14 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
 
         await waitForListenerReady()
         const connectionId = await acpConnect(agentType, workingDir, sessionId)
+
+        // If disconnect was requested while connect was in flight,
+        // tear down immediately instead of registering the connection.
+        if (abandonedKeysRef.current.delete(contextKey)) {
+          acpDisconnect(connectionId).catch(() => {})
+          return
+        }
+
         reverseMapRef.current.set(connectionId, contextKey)
         lastActivityRef.current.set(contextKey, Date.now())
         dispatch({
@@ -1780,6 +1820,7 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
         throw err
       } finally {
         connectingKeysRef.current.delete(contextKey)
+        abandonedKeysRef.current.delete(contextKey)
       }
     },
     [
@@ -1796,7 +1837,14 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
   const disconnect = useCallback(
     async (contextKey: string) => {
       const conn = storeRef.current.connections.get(contextKey)
-      if (!conn) return
+      if (!conn) {
+        // connect() is still in flight — mark as abandoned so it
+        // tears down immediately when acpConnect returns.
+        if (connectingKeysRef.current.has(contextKey)) {
+          abandonedKeysRef.current.add(contextKey)
+        }
+        return
+      }
       await acpDisconnect(conn.connectionId)
       reverseMapRef.current.delete(conn.connectionId)
       lastActivityRef.current.delete(contextKey)
@@ -1885,6 +1933,7 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
       respondPermission,
       setActiveKey,
       touchActivity,
+      registerOpenTabKeys,
     }),
     [
       connect,
@@ -1897,6 +1946,7 @@ export function AcpConnectionsProvider({ children }: { children: ReactNode }) {
       respondPermission,
       setActiveKey,
       touchActivity,
+      registerOpenTabKeys,
     ]
   )
 

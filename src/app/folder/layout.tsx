@@ -1,6 +1,13 @@
 "use client"
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react"
+import {
+  Suspense,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import { useSearchParams } from "next/navigation"
 import type { ImperativePanelGroupHandle } from "react-resizable-panels"
 import { FolderTitleBar } from "@/components/layout/folder-title-bar"
@@ -9,9 +16,12 @@ import { StatusBar } from "@/components/layout/status-bar"
 import { FolderProvider } from "@/contexts/folder-context"
 import { TaskProvider } from "@/contexts/task-context"
 import { AlertProvider } from "@/contexts/alert-context"
-import { AcpConnectionsProvider } from "@/contexts/acp-connections-context"
+import {
+  AcpConnectionsProvider,
+  useAcpActions,
+} from "@/contexts/acp-connections-context"
 import { ConversationRuntimeProvider } from "@/contexts/conversation-runtime-context"
-import { TabProvider } from "@/contexts/tab-context"
+import { TabProvider, useTabContext } from "@/contexts/tab-context"
 import { SessionStatsProvider } from "@/contexts/session-stats-context"
 import { SidebarProvider, useSidebarContext } from "@/contexts/sidebar-context"
 import {
@@ -22,6 +32,7 @@ import {
   TerminalProvider,
   useTerminalContext,
 } from "@/contexts/terminal-context"
+import { GitCredentialProvider } from "@/contexts/git-credential-context"
 import {
   WorkspaceProvider,
   useWorkspaceContext,
@@ -56,6 +67,17 @@ const DEFAULT_FUSION_LAYOUT: [number, number] = [56, 44]
 const MIN_CENTER_WIDTH_PX = 420
 const MIN_WORKSPACE_HEIGHT_PX = 220
 const LAYOUT_EPSILON = 0.25
+
+/** Syncs open tab keys from TabProvider to AcpConnectionsProvider */
+function TabKeysSync() {
+  const { tabs } = useTabContext()
+  const { registerOpenTabKeys } = useAcpActions()
+  const keys = useMemo(() => new Set(tabs.map((t) => t.id)), [tabs])
+  useEffect(() => {
+    registerOpenTabKeys(keys)
+  }, [keys, registerOpenTabKeys])
+  return null
+}
 
 function isSameLayout(a: number[], b: number[]): boolean {
   if (a.length !== b.length) return false
@@ -642,42 +664,45 @@ function FolderLayoutInner({ children }: { children: React.ReactNode }) {
       initialAgentType={agentType}
     >
       <AlertProvider>
-        <TaskProvider>
-          <AcpConnectionsProvider>
-            <ConversationRuntimeProvider>
-              <WorkspaceProvider key={`workspace-${normalizedFolderId}`}>
-                <TabProvider>
-                  <SessionStatsProvider>
-                    <SidebarProvider
-                      key={`left-sidebar-${normalizedFolderId}`}
-                      folderId={normalizedFolderId}
-                    >
-                      <AuxPanelProvider
-                        key={`right-sidebar-${normalizedFolderId}`}
+        <GitCredentialProvider>
+          <TaskProvider>
+            <AcpConnectionsProvider>
+              <ConversationRuntimeProvider>
+                <WorkspaceProvider key={`workspace-${normalizedFolderId}`}>
+                  <TabProvider>
+                    <TabKeysSync />
+                    <SessionStatsProvider>
+                      <SidebarProvider
+                        key={`left-sidebar-${normalizedFolderId}`}
                         folderId={normalizedFolderId}
                       >
-                        <TerminalProvider>
-                          <div className="flex h-screen flex-col overflow-hidden">
-                            <FolderTitleBar />
-                            <FolderWorkspaceShell>
-                              {children}
-                            </FolderWorkspaceShell>
-                            <StatusBar />
-                            <AppToaster
-                              position="bottom-right"
-                              duration={TOAST_DURATION_MS}
-                              closeButton
-                            />
-                          </div>
-                        </TerminalProvider>
-                      </AuxPanelProvider>
-                    </SidebarProvider>
-                  </SessionStatsProvider>
-                </TabProvider>
-              </WorkspaceProvider>
-            </ConversationRuntimeProvider>
-          </AcpConnectionsProvider>
-        </TaskProvider>
+                        <AuxPanelProvider
+                          key={`right-sidebar-${normalizedFolderId}`}
+                          folderId={normalizedFolderId}
+                        >
+                          <TerminalProvider>
+                            <div className="flex h-screen flex-col overflow-hidden">
+                              <FolderTitleBar />
+                              <FolderWorkspaceShell>
+                                {children}
+                              </FolderWorkspaceShell>
+                              <StatusBar />
+                              <AppToaster
+                                position="bottom-right"
+                                duration={TOAST_DURATION_MS}
+                                closeButton
+                              />
+                            </div>
+                          </TerminalProvider>
+                        </AuxPanelProvider>
+                      </SidebarProvider>
+                    </SessionStatsProvider>
+                  </TabProvider>
+                </WorkspaceProvider>
+              </ConversationRuntimeProvider>
+            </AcpConnectionsProvider>
+          </TaskProvider>
+        </GitCredentialProvider>
       </AlertProvider>
     </FolderProvider>
   )

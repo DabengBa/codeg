@@ -57,6 +57,27 @@
       "clone": "Klonen"
     }
   },
+  "GitCredentialDialog": {
+    "title": "Authentifizierung erforderlich",
+    "description": "Der Remote-Server erfordert Anmeldedaten. Geben Sie Ihren Benutzernamen und Ihr Passwort (oder persönliches Zugriffstoken) ein.",
+    "username": "Benutzername",
+    "usernamePlaceholder": "Benutzername oder E-Mail",
+    "password": "Passwort / Token",
+    "passwordPlaceholder": "Passwort oder persönliches Zugriffstoken",
+    "passwordHint": "Geben Sie Benutzername und Passwort des Servers ein.",
+    "cancel": "Abbrechen",
+    "authenticate": "Authentifizieren",
+    "authenticating": "Authentifizierung...",
+    "invalidCredentials": "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.",
+    "saveCredentials": "Anmeldedaten für zukünftige Vorgänge speichern",
+    "githubTitle": "GitHub-Authentifizierung",
+    "githubDescription": "Geben Sie ein persönliches Zugriffstoken ein, um sich mit GitHub zu verbinden. Das Token wird validiert und automatisch gespeichert.",
+    "githubToken": "Persönliches Zugriffstoken",
+    "githubTokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "githubTokenHint": "Erstellen Sie ein Token unter GitHub → Settings → Developer settings → Personal access tokens.",
+    "githubAuthenticate": "Validieren & verbinden",
+    "generateToken": "Token erstellen"
+  },
   "SettingsShell": {
     "title": "Einstellungen",
     "preferences": "Präferenzen",
@@ -66,6 +87,7 @@
       "mcp": "MCP",
       "skills": "Skills",
       "shortcuts": "Kurzbefehle",
+      "version_control": "Versionskontrolle",
       "system": "Systemeinstellungen"
     }
   },
@@ -126,6 +148,75 @@
       "downloadFailed": "Das Update-Paket konnte nicht heruntergeladen werden. Bitte später erneut versuchen.",
       "installFailed": "Das Update konnte nicht installiert werden. Bitte App schließen und erneut versuchen.",
       "unknown": "Update fehlgeschlagen. Bitte später erneut versuchen."
+    }
+  },
+  "VersionControlSettings": {
+    "loading": "Laden...",
+    "sectionTitle": "Versionskontrolle",
+    "sectionDescription": "Git-Programm konfigurieren und GitHub-Konten verwalten.",
+    "gitTitle": "Git-Konfiguration",
+    "gitDescription": "Konfigurieren Sie das von der Anwendung verwendete Git-Programm.",
+    "gitDetected": "Git erkannt",
+    "gitNotFound": "Git wurde nicht gefunden",
+    "gitVersion": "Version",
+    "gitPath": "Pfad",
+    "customGitPath": "Benutzerdefinierter Git-Pfad",
+    "customGitPathPlaceholder": "/usr/bin/git",
+    "customGitPathHint": "Leer lassen, um den automatisch erkannten Pfad zu verwenden.",
+    "test": "Testen",
+    "testing": "Teste...",
+    "testSuccess": "Git-Programm ist gültig.",
+    "testFailed": "Git-Test fehlgeschlagen: {message}",
+    "save": "Speichern",
+    "saving": "Speichern...",
+    "saveSuccess": "Git-Einstellungen gespeichert.",
+    "saveFailed": "Speichern fehlgeschlagen: {message}",
+    "githubTitle": "GitHub-Konten",
+    "githubDescription": "GitHub-Konten für die Authentifizierung verwalten. Token werden lokal gespeichert.",
+    "noAccounts": "Keine GitHub-Konten konfiguriert.",
+    "addAccount": "Konto hinzufügen",
+    "serverUrl": "Server-URL",
+    "serverUrlPlaceholder": "https://github.com",
+    "token": "Persönlicher Zugriffstoken",
+    "tokenPlaceholder": "ghp_xxxxxxxxxxxx",
+    "generateToken": "Token erstellen",
+    "tokenHint": "Erstellen Sie einen Token unter GitHub → Settings → Developer settings → Personal access tokens.",
+    "validateAndAdd": "Validieren & hinzufügen",
+    "validating": "Validiere...",
+    "addSuccess": "Konto {username} erfolgreich hinzugefügt.",
+    "addFailed": "Konto konnte nicht hinzugefügt werden: {message}",
+    "testConnection": "Testen",
+    "connectionSuccess": "Verbindung erfolgreich.",
+    "connectionFailed": "Verbindung fehlgeschlagen: {message}",
+    "setDefault": "Als Standard festlegen",
+    "defaultLabel": "Standard",
+    "defaultSet": "Standardkonto aktualisiert.",
+    "removeAccount": "Entfernen",
+    "removeConfirmTitle": "Konto entfernen",
+    "removeConfirmMessage": "Möchten Sie das Konto \"{username}\" wirklich entfernen?",
+    "removeConfirm": "Entfernen",
+    "removeCancel": "Abbrechen",
+    "removeSuccess": "Konto entfernt.",
+    "scopes": "Berechtigungen",
+    "loadFailed": "Einstellungen konnten nicht geladen werden: {message}",
+    "gitAccount": {
+      "sectionTitle": "Git-Server-Konten",
+      "sectionDescription": "Verwalten Sie Anmeldedaten für Nicht-GitHub-Git-Server (GitLab, Bitbucket, selbst gehostet usw.).",
+      "noAccounts": "Keine Git-Server-Konten konfiguriert.",
+      "addAccount": "Konto hinzufügen",
+      "addTitle": "Git-Konto hinzufügen",
+      "addDescription": "Geben Sie Serveradresse, Benutzername und Passwort oder Zugriffstoken ein.",
+      "serverUrl": "Server-URL",
+      "serverUrlPlaceholder": "https://gitlab.example.com",
+      "username": "Benutzername",
+      "usernamePlaceholder": "Benutzername oder E-Mail",
+      "password": "Passwort / Token",
+      "passwordPlaceholder": "Passwort oder Zugriffstoken",
+      "passwordHint": "Geben Sie das Passwort oder Zugriffstoken des Servers ein.",
+      "add": "Hinzufügen",
+      "serverRequired": "Server-URL ist erforderlich.",
+      "usernameRequired": "Benutzername ist erforderlich.",
+      "passwordRequired": "Passwort ist erforderlich."
     }
   },
   "ShortcutSettings": {
@@ -587,7 +678,8 @@
       "create": "Erstellen",
       "createAndSwitch": "Erstellen und wechseln",
       "openFile": "Datei öffnen",
-      "viewDiff": "Diff anzeigen"
+      "viewDiff": "Diff anzeigen",
+      "push": "Pushen..."
     },
     "modes": {
       "conversation": "Konversationsmodus",
@@ -783,6 +875,7 @@
     "branchDropdown": {
       "toasts": {
         "commitCodeCompleted": "Code-Commit abgeschlossen",
+        "pushCodeCompleted": "Code-Push abgeschlossen",
         "committedFiles": "{count, plural, one {# Datei committet} other {# Dateien committet}}",
         "taskCompleted": "{label} abgeschlossen",
         "taskFailed": "{label} fehlgeschlagen",
@@ -791,6 +884,7 @@
         "allFilesUpToDate": "Alle Dateien sind aktuell",
         "updatedFiles": "{count, plural, one {# Datei aktualisiert} other {# Dateien aktualisiert}}",
         "openCommitWindowFailed": "Commit-Fenster konnte nicht geöffnet werden",
+        "openPushWindowFailed": "Push-Fenster konnte nicht geöffnet werden",
         "upstreamSet": "Upstream-Branch wurde gesetzt",
         "upstreamSetAndPushed": "Upstream-Branch gesetzt und {count, plural, one {# Commit} other {# Commits}} gepusht",
         "noCommitsToPush": "Keine Commits zum Pushen",
@@ -941,6 +1035,23 @@
       "clickFileToDiff": "Dateinamen anklicken, um Diff zu sehen",
       "loadingDiff": "Diff wird geladen..."
     },
+    "pushWindow": {
+      "title": "Code pushen",
+      "noUnpushedCommits": "Keine ungepushten Commits",
+      "unpushed": "Nicht gepusht",
+      "selectFileToViewDiff": "Datei auswählen, um Unterschiede anzuzeigen",
+      "before": "Vorher",
+      "after": "Nachher",
+      "push": "Pushen",
+      "toasts": {
+        "pushSuccess": "Push erfolgreich",
+        "pushFailed": "Push fehlgeschlagen",
+        "upstreamSet": "Remote-Tracking-Branch wurde eingerichtet",
+        "upstreamSetAndPushed": "Remote-Tracking-Branch eingerichtet und {count} Commits gepusht",
+        "noCommitsToPush": "Keine Commits zum Pushen",
+        "pushedCommits": "{count} Commits gepusht"
+      }
+    },
     "gitLogTab": {
       "filesTitle": "Dateien",
       "expandAllFiles": "Alle Dateien ausklappen",
@@ -974,7 +1085,8 @@
       "toasts": {
         "createdAndSwitchedNewBranch": "Neuen Branch erstellt und gewechselt",
         "newBranchFromCommit": "{name} (aus {shortHash})",
-        "createBranchFailed": "Branch konnte nicht erstellt werden"
+        "createBranchFailed": "Branch konnte nicht erstellt werden",
+        "openPushWindowFailed": "Push-Fenster konnte nicht geöffnet werden"
       },
       "branchSelector": {
         "selectBranchPlaceholder": "Branch auswählen...",
@@ -1001,7 +1113,8 @@
       "actions": {
         "commitCode": "Code committen",
         "rollback": "Zurücksetzen",
-        "addToVcs": "Zu VCS hinzufügen"
+        "addToVcs": "Zu VCS hinzufügen",
+        "delete": "Löschen"
       },
       "toasts": {
         "noAddableFilesInDir": "Keine geänderten Dateien in diesem Verzeichnis können zu VCS hinzugefügt werden",
@@ -1012,11 +1125,16 @@
         "rolledBack": "{name} zurückgesetzt",
         "rollbackFailed": "Rollback fehlgeschlagen",
         "addedFilesToVcs": "{count, plural, one {# Datei} other {# Dateien}} zu VCS hinzugefügt",
-        "rolledBackFiles": "{count, plural, one {# Datei zurückgesetzt} other {# Dateien zurückgesetzt}}"
+        "rolledBackFiles": "{count, plural, one {# Datei zurückgesetzt} other {# Dateien zurückgesetzt}}",
+        "deleted": "{name} gelöscht",
+        "deleteFailed": "Löschen fehlgeschlagen",
+        "deletedFiles": "{count} Dateien gelöscht",
+        "noDeletableFilesInDir": "In diesem Verzeichnis gibt es keine löschbaren geänderten Dateien"
       },
       "directoryDialog": {
         "descriptionAdd": "Dateien unter Verzeichnis {path} auswählen, um sie zu VCS hinzuzufügen.",
         "descriptionRollback": "Dateien unter Verzeichnis {path} auswählen, um sie zurückzusetzen.",
+        "descriptionDelete": "Dateien unter Verzeichnis {path} auswählen, um sie zu löschen. Diese Aktion kann nicht rückgängig gemacht werden.",
         "descriptionFallback": "Dateien auswählen, um fortzufahren.",
         "selectionCount": "{selected} / {total} Dateien ausgewählt",
         "selectAll": "Alle auswählen",
@@ -1028,6 +1146,13 @@
         "title": "Rollback bestätigen",
         "descriptionWithTarget": "Lokale Änderungen für {kind} \"{name}\" zurücksetzen?",
         "descriptionFallback": "Lokale Änderungen zurücksetzen?",
+        "kindDirectory": "Verzeichnis",
+        "kindFile": "Datei"
+      },
+      "deleteConfirm": {
+        "title": "Löschen bestätigen",
+        "descriptionWithTarget": "{kind} \"{name}\" löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "descriptionFallback": "Diese Aktion kann nicht rückgängig gemacht werden.",
         "kindDirectory": "Verzeichnis",
         "kindFile": "Datei"
       }
@@ -1207,7 +1332,8 @@
         "autoLinkPreflightFailed": "Auto-Link-Preflight fehlgeschlagen: {message}",
         "connectFailedTitle": "{agent} Verbindung fehlgeschlagen",
         "toolFallbackTitle": "Werkzeug",
-        "eventErrorTitle": "Agentenfehler"
+        "eventErrorTitle": "Agentenfehler",
+        "notificationTurnComplete": "{agent} hat die Antwort abgeschlossen"
       },
       "connectionLifecycle": {
         "tasks": {

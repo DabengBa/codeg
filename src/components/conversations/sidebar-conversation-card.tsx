@@ -1,12 +1,12 @@
 "use client"
 
-import { memo, useState, useCallback } from "react"
+import { memo, useState, useCallback, useMemo } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { enUS, zhCN, zhTW } from "date-fns/locale"
 import { GitBranch, Pencil, Trash2, Circle, Download, Plus } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import type { DbConversationSummary, ConversationStatus } from "@/lib/types"
-import { STATUS_COLORS } from "@/lib/types"
+import { STATUS_ORDER, STATUS_COLORS } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { AgentIcon } from "@/components/agent-icon"
 import {
@@ -38,13 +38,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-const ALL_STATUSES: ConversationStatus[] = [
-  "in_progress",
-  "pending_review",
-  "completed",
-  "cancelled",
-]
 
 interface SidebarConversationCardProps {
   conversation: DbConversationSummary
@@ -80,10 +73,14 @@ export const SidebarConversationCard = memo(function SidebarConversationCard({
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [renameValue, setRenameValue] = useState("")
 
-  const timeAgo = formatDistanceToNow(new Date(conversation.updated_at), {
-    addSuffix: true,
-    locale: dateFnsLocale,
-  })
+  const timeAgo = useMemo(
+    () =>
+      formatDistanceToNow(new Date(conversation.updated_at), {
+        addSuffix: true,
+        locale: dateFnsLocale,
+      }),
+    [conversation.updated_at, dateFnsLocale]
+  )
 
   const handleClick = useCallback(() => {
     onSelect(conversation.id, conversation.agent_type)
@@ -120,9 +117,10 @@ export const SidebarConversationCard = memo(function SidebarConversationCard({
             onClick={handleClick}
             onDoubleClick={handleDblClick}
             className={cn(
-              "w-full text-left px-3 py-2.5 rounded-md transition-colors",
-              "hover:bg-sidebar-accent/50",
-              isSelected && "bg-sidebar-accent text-sidebar-accent-foreground"
+              "w-full text-left px-3 py-2.5 mb-1 rounded-md transition-colors",
+              isSelected
+                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                : "hover:bg-sidebar-accent/50"
             )}
           >
             <div className="flex items-center gap-1.5 min-w-0">
@@ -166,7 +164,7 @@ export const SidebarConversationCard = memo(function SidebarConversationCard({
               {t("status")}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              {ALL_STATUSES.filter((s) => s !== conversation.status).map(
+              {STATUS_ORDER.filter((s) => s !== conversation.status).map(
                 (s) => (
                   <ContextMenuItem
                     key={s}

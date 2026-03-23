@@ -20,7 +20,10 @@ import {
   getLatestPlanEntries,
 } from "@/components/chat/agent-plan-overlay"
 import { MessageNavigatorOverlay } from "@/components/chat/message-navigator-overlay"
-import { MessageThread } from "@/components/ai-elements/message-thread"
+import {
+  MessageThread,
+  MessageThreadScrollButton,
+} from "@/components/ai-elements/message-thread"
 import { Message, MessageContent } from "@/components/ai-elements/message"
 import { Loader2 } from "lucide-react"
 import { useTranslations } from "next-intl"
@@ -530,6 +533,7 @@ export function MessageListView({
           overscan={10}
           rowContainerStyle={shiftedThreadRowStyle}
         />
+        <MessageThreadScrollButton />
       </MessageThread>
       {liveMessage && connStatus === "prompting" && (
         <LiveTurnStats
