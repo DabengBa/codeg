@@ -127,6 +127,7 @@
     "languageSaveSuccess": "Language settings saved",
     "languageSaveFailed": "Failed to save language settings: {message}",
     "updateTitle": "App Update",
+    "versionTitle": "Software Update",
     "updateDescription": "Check the configured release source for newer versions and install directly when available.",
     "currentVersion": "Current version",
     "upgradableVersion": "Latest version",
@@ -613,6 +614,7 @@
       "openClawSaved": "OpenClaw config saved",
       "saveOpenClawFailed": "Failed to save OpenClaw config",
       "configSaved": "Config saved",
+      "configSavedHint": "Existing sessions need to be reopened to take effect",
       "saveConfigManagementFailed": "Failed to save config management"
     },
     "version": {
@@ -870,7 +872,10 @@
       "next": "Next",
       "jumpToLine": "Jump to line {line}",
       "noParsedDiffSections": "No parsed diff sections",
-      "loadingEditor": "Loading editor..."
+      "loadingEditor": "Loading editor...",
+      "imageZoomIn": "Zoom in",
+      "imageZoomOut": "Zoom out",
+      "imageZoomReset": "Reset zoom"
     },
     "branchDropdown": {
       "toasts": {
@@ -1038,6 +1043,7 @@
     "pushWindow": {
       "title": "Push Code",
       "noUnpushedCommits": "No unpushed commits",
+      "newBranchNoPushedCommits": "New branch — push to create remote tracking branch",
       "unpushed": "Unpushed",
       "selectFileToViewDiff": "Select a file to view diff",
       "before": "Before",
@@ -1356,7 +1362,7 @@
       },
       "chatInput": {
         "connecting": "Connecting...",
-        "agentResponding": "Agent is responding...",
+        "agentResponding": "{agent} is responding...",
         "sendMessage": "Send a message..."
       },
       "messageInput": {
@@ -1449,7 +1455,8 @@
         "attachedResources": "Attached resources",
         "loading": "Loading...",
         "error": "Error: {message}",
-        "emptyConversation": "No messages in this conversation."
+        "emptyConversation": "No messages in this conversation.",
+        "systemMessage": "System message"
       },
       "liveTurnStats": {
         "thinking": "Thinking...",

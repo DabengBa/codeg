@@ -39,12 +39,13 @@ import {
   extractUserResourcesFromDraft,
   getPromptDraftDisplayText,
 } from "@/lib/prompt-draft"
-import type {
-  AcpEvent,
-  AgentType,
-  ContentBlock,
-  MessageTurn,
-  PromptDraft,
+import {
+  AGENT_LABELS,
+  type AcpEvent,
+  type AgentType,
+  type ContentBlock,
+  type MessageTurn,
+  type PromptDraft,
 } from "@/lib/types"
 import {
   buildConversationDraftStorageKey,
@@ -140,7 +141,7 @@ const ConversationTabView = memo(function ConversationTabView({
   const tWelcome = useTranslations("Folder.chat.welcomeInputPanel")
   const sharedT = useTranslations("Folder.chat.shared")
   const { folder, folderId, refreshConversations } = useFolderContext()
-  const { tabs, bindConversationTab, setTabRuntimeConversationId } =
+  const { tabs, bindConversationTab, setTabRuntimeConversationId, pinTab } =
     useTabContext()
   const { setSessionStats } = useSessionStats()
   const {
@@ -542,6 +543,12 @@ const ConversationTabView = memo(function ConversationTabView({
       setSendSignal((prev) => prev + 1)
       setSyncState(effectiveConversationId, "awaiting_persist")
       setHasSentMessage(true)
+
+      // Pin the tab if it was a temporary preview (single-click opened)
+      const currentTab = tabs.find((tab) => tab.id === tabId)
+      if (currentTab && !currentTab.isPinned) {
+        pinTab(tabId)
+      }
       lifecycleSend(draft, selectedModeIdArg)
 
       const persistedId = dbConvIdRef.current
@@ -617,12 +624,14 @@ const ConversationTabView = memo(function ConversationTabView({
       folderId,
       hasPersistedConversation,
       lifecycleSend,
+      pinTab,
       refreshConversations,
       selectedAgent,
       setExternalId,
       setPendingCleanup,
       setSyncState,
       sharedT,
+      tabs,
       tWelcome,
       tabId,
       trySaveExternalId,
@@ -717,30 +726,34 @@ const ConversationTabView = memo(function ConversationTabView({
       setModeId(null)
       setAgentConnectError(null)
 
-      // If not yet connected, just update state — auto-connect will use the
-      // new agentType once canAutoConnect is satisfied.
       const s = connStatusRef.current
-      if (!s || s === "disconnected" || s === "error") return
+      const doConnect = () => {
+        if (!workingDirForConnection) return
+        connConnect(nextAgentType, workingDirForConnection, undefined, {
+          source: "auto_link",
+        })
+          .then(() => {
+            setAgentConnectError(null)
+          })
+          .catch((e) => {
+            setAgentConnectError(normalizeErrorMessage(e))
+            if (!isExpectedAutoLinkError(e)) {
+              console.error("[ConversationTabView] switch agent:", e)
+            }
+          })
+      }
+
+      // If not yet connected, directly attempt to connect with the new agent.
+      if (!s || s === "disconnected" || s === "error") {
+        doConnect()
+        return
+      }
 
       connDisconnect()
         .catch((e) =>
           console.error("[ConversationTabView] disconnect old agent:", e)
         )
-        .finally(() => {
-          if (!workingDirForConnection) return
-          connConnect(nextAgentType, workingDirForConnection, undefined, {
-            source: "auto_link",
-          })
-            .then(() => {
-              setAgentConnectError(null)
-            })
-            .catch((e) => {
-              setAgentConnectError(normalizeErrorMessage(e))
-              if (!isExpectedAutoLinkError(e)) {
-                console.error("[ConversationTabView] switch agent:", e)
-              }
-            })
-        })
+        .finally(doConnect)
     },
     [connConnect, connDisconnect, workingDirForConnection]
   )
@@ -824,6 +837,7 @@ const ConversationTabView = memo(function ConversationTabView({
       status={connStatus}
       promptCapabilities={conn.promptCapabilities}
       defaultPath={workingDirForConnection}
+      agentName={AGENT_LABELS[selectedAgent]}
       error={conn.error}
       pendingPermission={conn.pendingPermission}
       pendingQuestion={conn.pendingQuestion}
@@ -866,7 +880,9 @@ const ConversationTabView = memo(function ConversationTabView({
         <div className="flex h-full min-h-0 flex-col items-center justify-center">
           <div className="flex w-full max-w-2xl flex-col gap-4 px-4">
             <AgentSelector
-              defaultAgentType={selectedAgent}
+              defaultAgentType={
+                conversationId != null ? selectedAgent : undefined
+              }
               onSelect={handleAgentSelect}
               onAgentsLoaded={(agents) => {
                 setAgentsLoaded(true)
@@ -896,6 +912,7 @@ const ConversationTabView = memo(function ConversationTabView({
               status={connStatus}
               promptCapabilities={conn.promptCapabilities}
               defaultPath={workingDirForConnection}
+              agentName={AGENT_LABELS[selectedAgent]}
               onFocus={handleFocus}
               onSend={handleSend}
               onCancel={handleCancel}
@@ -917,7 +934,9 @@ const ConversationTabView = memo(function ConversationTabView({
         <div className="flex h-full min-h-0 flex-col">
           <div className="px-4 pt-3 pb-2">
             <AgentSelector
-              defaultAgentType={selectedAgent}
+              defaultAgentType={
+                conversationId != null ? selectedAgent : undefined
+              }
               onSelect={handleAgentSelect}
               onAgentsLoaded={(agents) => {
                 setAgentsLoaded(true)

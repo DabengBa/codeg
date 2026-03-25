@@ -24,6 +24,8 @@ fn system_tag_regex() -> &'static Regex {
             r"|<command-args>.*?</command-args>",
             r"|<local-command-stdout>.*?</local-command-stdout>",
             r"|<user-prompt-submit-hook>.*?</user-prompt-submit-hook>",
+            r"|<task-notification>.*?</task-notification>",
+            r"|<fast_mode_info>.*?</fast_mode_info>",
         ))
         .unwrap()
     })
@@ -62,6 +64,21 @@ fn is_meta_message(value: &serde_json::Value) -> bool {
 /// Claude Code for local commands like `/context` or `/model`).
 /// These carry `model: "<synthetic>"` and all-zero usage, so they should be
 /// excluded from conversation turns and stats.
+const CONTEXT_CONTINUATION_PREFIX: &str =
+    "This session is being continued from a previous conversation";
+
+/// Detect Claude Code context continuation summary messages.
+/// These are injected as "user" type but are actually system context.
+fn is_context_continuation(content: &[ContentBlock]) -> bool {
+    content.iter().any(|block| {
+        if let ContentBlock::Text { text } = block {
+            text.starts_with(CONTEXT_CONTINUATION_PREFIX)
+        } else {
+            false
+        }
+    })
+}
+
 fn is_synthetic_assistant(value: &serde_json::Value) -> bool {
     value
         .get("message")
@@ -102,9 +119,9 @@ fn claude_context_window_max_tokens_for_model(model: Option<&str>) -> Option<u64
         return Some(suffixed_limit);
     }
 
-    // Claude models default to 200k when no explicit capacity is provided.
+    // Claude models default to 1M when no explicit capacity is provided.
     if model.to_ascii_lowercase().starts_with("claude") {
-        return Some(200_000);
+        return Some(1_000_000);
     }
 
     None
@@ -486,18 +503,24 @@ impl ClaudeParser {
                         .unwrap_or("")
                         .to_string();
 
-                    if title.is_none() {
-                        if let Some(first_text) = content.iter().find_map(|c| match c {
-                            ContentBlock::Text { text } => Some(text.clone()),
-                            _ => None,
-                        }) {
-                            title = Some(truncate_str(&first_text, 100));
+                    // Detect context continuation summary and treat as system message
+                    let role = if is_context_continuation(&content) {
+                        MessageRole::System
+                    } else {
+                        if title.is_none() {
+                            if let Some(first_text) = content.iter().find_map(|c| match c {
+                                ContentBlock::Text { text } => Some(text.clone()),
+                                _ => None,
+                            }) {
+                                title = Some(truncate_str(&first_text, 100));
+                            }
                         }
-                    }
+                        MessageRole::User
+                    };
 
                     messages.push(UnifiedMessage {
                         id: uuid,
-                        role: MessageRole::User,
+                        role,
                         content,
                         timestamp,
                         usage: None,
@@ -558,7 +581,8 @@ impl ClaudeParser {
         let folder_path = cwd.clone();
         let folder_name = folder_path.as_ref().map(|p| folder_name_from_path(p));
 
-        let turns = group_into_turns(messages);
+        let mut turns = group_into_turns(messages);
+        super::relocate_orphaned_tool_results(&mut turns);
         let context_window_used_tokens = latest_claude_context_window_used_tokens(&turns);
         let context_window_max_tokens =
             claude_context_window_max_tokens_for_model(model.as_deref());
@@ -863,11 +887,9 @@ fn group_into_turns(messages: Vec<UnifiedMessage>) -> Vec<MessageTurn> {
             let turn_model = msg.model.clone();
             i += 1;
 
-            // Absorb consecutive assistant msgs AND tool-result-only user msgs
-            while i < messages.len()
-                && (matches!(messages[i].role, MessageRole::Assistant)
-                    || is_tool_result_only(&messages[i]))
-            {
+            // Only absorb immediately following tool-result-only user msgs
+            // (stop at the next assistant message to keep turns small for virtualization)
+            while i < messages.len() && is_tool_result_only(&messages[i]) {
                 blocks.extend(messages[i].content.clone());
                 i += 1;
             }

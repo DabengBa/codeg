@@ -127,6 +127,7 @@
     "languageSaveSuccess": "La configuración de idioma se guardó",
     "languageSaveFailed": "No se pudo guardar la configuración de idioma: {message}",
     "updateTitle": "Actualización de la app",
+    "versionTitle": "Actualización de software",
     "updateDescription": "Comprueba versiones más nuevas en la fuente de versiones configurada e instálalas directamente cuando estén disponibles.",
     "currentVersion": "Versión actual",
     "upgradableVersion": "Última versión",
@@ -613,6 +614,7 @@
       "openClawSaved": "Configuración de OpenClaw guardada",
       "saveOpenClawFailed": "No se pudo guardar la configuración de OpenClaw",
       "configSaved": "Configuración guardada",
+      "configSavedHint": "Las sesiones existentes deben reabrirse para que surta efecto",
       "saveConfigManagementFailed": "No se pudo guardar la gestión de configuración"
     },
     "version": {
@@ -870,7 +872,10 @@
       "next": "Siguiente",
       "jumpToLine": "Ir a la línea {line}",
       "noParsedDiffSections": "No hay secciones de diff analizadas",
-      "loadingEditor": "Cargando editor..."
+      "loadingEditor": "Cargando editor...",
+      "imageZoomIn": "Ampliar",
+      "imageZoomOut": "Reducir",
+      "imageZoomReset": "Restablecer zoom"
     },
     "branchDropdown": {
       "toasts": {
@@ -1038,6 +1043,7 @@
     "pushWindow": {
       "title": "Enviar código",
       "noUnpushedCommits": "No hay commits sin enviar",
+      "newBranchNoPushedCommits": "Nueva rama — enviar para crear rama de seguimiento remota",
       "unpushed": "Sin enviar",
       "selectFileToViewDiff": "Selecciona un archivo para ver las diferencias",
       "before": "Antes",
@@ -1356,7 +1362,7 @@
       },
       "chatInput": {
         "connecting": "Conectando...",
-        "agentResponding": "El agente está respondiendo...",
+        "agentResponding": "{agent} está respondiendo...",
         "sendMessage": "Enviar un mensaje..."
       },
       "messageInput": {
@@ -1449,7 +1455,8 @@
         "attachedResources": "Recursos adjuntos",
         "loading": "Cargando...",
         "error": "Error del chat: {message}",
-        "emptyConversation": "No hay mensajes en esta conversación."
+        "emptyConversation": "No hay mensajes en esta conversación.",
+        "systemMessage": "Mensaje del sistema"
       },
       "liveTurnStats": {
         "thinking": "Pensando...",

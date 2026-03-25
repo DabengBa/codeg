@@ -127,6 +127,7 @@
     "languageSaveSuccess": "Spracheinstellungen wurden gespeichert",
     "languageSaveFailed": "Spracheinstellungen konnten nicht gespeichert werden: {message}",
     "updateTitle": "App-Update",
+    "versionTitle": "Softwareupdate",
     "updateDescription": "Prüft die konfigurierte Release-Quelle auf neue Versionen und installiert sie bei Verfügbarkeit direkt.",
     "currentVersion": "Aktuelle Version",
     "upgradableVersion": "Neueste Version",
@@ -613,6 +614,7 @@
       "openClawSaved": "OpenClaw-Konfiguration gespeichert",
       "saveOpenClawFailed": "Speichern der OpenClaw-Konfiguration fehlgeschlagen",
       "configSaved": "Konfiguration gespeichert",
+      "configSavedHint": "Bestehende Sitzungen müssen neu geöffnet werden, damit die Änderungen wirksam werden",
       "saveConfigManagementFailed": "Speichern der Konfigurationsverwaltung fehlgeschlagen"
     },
     "version": {
@@ -870,7 +872,10 @@
       "next": "Weiter",
       "jumpToLine": "Zu Zeile {line} springen",
       "noParsedDiffSections": "Keine geparsten Diff-Abschnitte",
-      "loadingEditor": "Editor wird geladen..."
+      "loadingEditor": "Editor wird geladen...",
+      "imageZoomIn": "Vergrößern",
+      "imageZoomOut": "Verkleinern",
+      "imageZoomReset": "Zoom zurücksetzen"
     },
     "branchDropdown": {
       "toasts": {
@@ -1038,6 +1043,7 @@
     "pushWindow": {
       "title": "Code pushen",
       "noUnpushedCommits": "Keine ungepushten Commits",
+      "newBranchNoPushedCommits": "Neuer Branch — pushen, um Remote-Tracking-Branch zu erstellen",
       "unpushed": "Nicht gepusht",
       "selectFileToViewDiff": "Datei auswählen, um Unterschiede anzuzeigen",
       "before": "Vorher",
@@ -1356,7 +1362,7 @@
       },
       "chatInput": {
         "connecting": "Verbinden...",
-        "agentResponding": "Agent antwortet...",
+        "agentResponding": "{agent} antwortet...",
         "sendMessage": "Nachricht senden..."
       },
       "messageInput": {
@@ -1449,7 +1455,8 @@
         "attachedResources": "Angehängte Ressourcen",
         "loading": "Lädt...",
         "error": "Fehler: {message}",
-        "emptyConversation": "Keine Nachrichten in dieser Unterhaltung."
+        "emptyConversation": "Keine Nachrichten in dieser Unterhaltung.",
+        "systemMessage": "Systemnachricht"
       },
       "liveTurnStats": {
         "thinking": "Denkt nach...",

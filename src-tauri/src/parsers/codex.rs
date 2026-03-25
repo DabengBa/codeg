@@ -771,7 +771,8 @@ impl CodexParser {
         let folder_path = cwd.clone();
         let folder_name = folder_path.as_ref().map(|p| folder_name_from_path(p));
 
-        let turns = group_into_turns(messages);
+        let mut turns = group_into_turns(messages);
+        super::relocate_orphaned_tool_results(&mut turns);
         let mut session_stats = super::compute_session_stats(&turns);
         session_stats =
             merge_codex_total_usage_stats(session_stats, latest_total_usage, latest_total_tokens);
@@ -1192,9 +1193,10 @@ fn group_into_turns(messages: Vec<UnifiedMessage>) -> Vec<MessageTurn> {
             let timestamp = msg.timestamp;
             i += 1;
 
+            // Only absorb immediately following Tool messages
+            // (stop at the next assistant message to keep turns small for virtualization)
             while i < messages.len()
-                && (matches!(messages[i].role, MessageRole::Assistant)
-                    || matches!(messages[i].role, MessageRole::Tool))
+                && matches!(messages[i].role, MessageRole::Tool)
             {
                 blocks.extend(messages[i].content.clone());
                 if usage.is_none() {

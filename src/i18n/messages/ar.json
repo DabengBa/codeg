@@ -127,6 +127,7 @@
     "languageSaveSuccess": "تم حفظ إعدادات اللغة",
     "languageSaveFailed": "فشل حفظ إعدادات اللغة: {message}",
     "updateTitle": "تحديث التطبيق",
+    "versionTitle": "تحديث البرنامج",
     "updateDescription": "تحقق من المصدر المهيأ للإصدارات الأحدث وثبّت التحديث مباشرة عند توفره.",
     "currentVersion": "الإصدار الحالي",
     "upgradableVersion": "أحدث إصدار",
@@ -613,6 +614,7 @@
       "openClawSaved": "تم حفظ إعداد OpenClaw",
       "saveOpenClawFailed": "فشل حفظ إعداد OpenClaw",
       "configSaved": "تم حفظ الإعداد",
+      "configSavedHint": "يجب إعادة فتح الجلسات الحالية لتطبيق التغييرات",
       "saveConfigManagementFailed": "فشل حفظ إدارة الإعدادات"
     },
     "version": {
@@ -870,7 +872,10 @@
       "next": "التالي",
       "jumpToLine": "الانتقال إلى السطر {line}",
       "noParsedDiffSections": "لا توجد أقسام diff محللة",
-      "loadingEditor": "جارٍ تحميل المحرر..."
+      "loadingEditor": "جارٍ تحميل المحرر...",
+      "imageZoomIn": "تكبير",
+      "imageZoomOut": "تصغير",
+      "imageZoomReset": "إعادة تعيين التكبير"
     },
     "branchDropdown": {
       "toasts": {
@@ -1038,6 +1043,7 @@
     "pushWindow": {
       "title": "دفع الكود",
       "noUnpushedCommits": "لا توجد التزامات غير مدفوعة",
+      "newBranchNoPushedCommits": "فرع جديد — ادفع لإنشاء فرع تتبع عن بُعد",
       "unpushed": "غير مدفوع",
       "selectFileToViewDiff": "اختر ملفًا لعرض الفرق",
       "before": "قبل",
@@ -1356,7 +1362,7 @@
       },
       "chatInput": {
         "connecting": "جارٍ الاتصال...",
-        "agentResponding": "الوكيل يرد...",
+        "agentResponding": "{agent} يرد...",
         "sendMessage": "أرسل رسالة..."
       },
       "messageInput": {
@@ -1449,7 +1455,8 @@
         "attachedResources": "الموارد المرفقة",
         "loading": "جارٍ التحميل...",
         "error": "خطأ: {message}",
-        "emptyConversation": "لا توجد رسائل في هذه المحادثة."
+        "emptyConversation": "لا توجد رسائل في هذه المحادثة.",
+        "systemMessage": "رسالة النظام"
       },
       "liveTurnStats": {
         "thinking": "جارٍ التفكير...",

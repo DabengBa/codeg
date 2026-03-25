@@ -127,6 +127,7 @@
     "languageSaveSuccess": "言語設定を保存しました",
     "languageSaveFailed": "言語設定の保存に失敗しました: {message}",
     "updateTitle": "アプリ更新",
+    "versionTitle": "ソフトウェアアップデート",
     "updateDescription": "設定されたリリースソースで新しいバージョンを確認し、利用可能なら直接インストールします。",
     "currentVersion": "現在のバージョン",
     "upgradableVersion": "最新バージョン",
@@ -613,6 +614,7 @@
       "openClawSaved": "OpenClaw設定を保存しました",
       "saveOpenClawFailed": "OpenClaw設定の保存に失敗しました",
       "configSaved": "設定を保存しました",
+      "configSavedHint": "既存のセッションは再度開く必要があります",
       "saveConfigManagementFailed": "設定管理の保存に失敗しました"
     },
     "version": {
@@ -870,7 +872,10 @@
       "next": "次",
       "jumpToLine": "{line} 行へ移動",
       "noParsedDiffSections": "解析済みの差分セクションがありません",
-      "loadingEditor": "エディターを読み込み中..."
+      "loadingEditor": "エディターを読み込み中...",
+      "imageZoomIn": "拡大",
+      "imageZoomOut": "縮小",
+      "imageZoomReset": "ズームをリセット"
     },
     "branchDropdown": {
       "toasts": {
@@ -1038,6 +1043,7 @@
     "pushWindow": {
       "title": "コードをプッシュ",
       "noUnpushedCommits": "未プッシュのコミットはありません",
+      "newBranchNoPushedCommits": "新しいブランチ — プッシュしてリモート追跡ブランチを作成",
       "unpushed": "未プッシュ",
       "selectFileToViewDiff": "ファイルを選択して差分を表示",
       "before": "変更前",
@@ -1356,7 +1362,7 @@
       },
       "chatInput": {
         "connecting": "接続中...",
-        "agentResponding": "エージェントが応答中...",
+        "agentResponding": "{agent} が応答中...",
         "sendMessage": "メッセージを送信..."
       },
       "messageInput": {
@@ -1449,7 +1455,8 @@
         "attachedResources": "添付リソース",
         "loading": "読み込み中...",
         "error": "エラー: {message}",
-        "emptyConversation": "この会話にはメッセージがありません。"
+        "emptyConversation": "この会話にはメッセージがありません。",
+        "systemMessage": "システムメッセージ"
       },
       "liveTurnStats": {
         "thinking": "考え中...",

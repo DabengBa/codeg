@@ -127,6 +127,7 @@
     "languageSaveSuccess": "Les paramètres de langue ont été enregistrés",
     "languageSaveFailed": "Échec de l’enregistrement des paramètres de langue : {message}",
     "updateTitle": "Mise à jour de l’app",
+    "versionTitle": "Mise à jour logicielle",
     "updateDescription": "Vérifiez les nouvelles versions depuis la source de publication configurée et installez-les directement si disponibles.",
     "currentVersion": "Version actuelle",
     "upgradableVersion": "Dernière version",
@@ -613,6 +614,7 @@
       "openClawSaved": "Configuration OpenClaw enregistrée",
       "saveOpenClawFailed": "Échec de l’enregistrement de la configuration OpenClaw",
       "configSaved": "Configuration enregistrée",
+      "configSavedHint": "Les sessions existantes doivent être rouvertes pour prendre effet",
       "saveConfigManagementFailed": "Échec de l’enregistrement de la gestion de configuration"
     },
     "version": {
@@ -870,7 +872,10 @@
       "next": "Suivant",
       "jumpToLine": "Aller à la ligne {line}",
       "noParsedDiffSections": "Aucune section de diff analysée",
-      "loadingEditor": "Chargement de l’éditeur..."
+      "loadingEditor": "Chargement de l’éditeur...",
+      "imageZoomIn": "Agrandir",
+      "imageZoomOut": "Réduire",
+      "imageZoomReset": "Réinitialiser le zoom"
     },
     "branchDropdown": {
       "toasts": {
@@ -1038,6 +1043,7 @@
     "pushWindow": {
       "title": "Pousser le code",
       "noUnpushedCommits": "Aucun commit non poussé",
+      "newBranchNoPushedCommits": "Nouvelle branche — pousser pour créer la branche de suivi distante",
       "unpushed": "Non poussé",
       "selectFileToViewDiff": "Sélectionnez un fichier pour voir les différences",
       "before": "Avant",
@@ -1356,7 +1362,7 @@
       },
       "chatInput": {
         "connecting": "Connexion...",
-        "agentResponding": "L'agent répond...",
+        "agentResponding": "{agent} répond...",
         "sendMessage": "Envoyer un message..."
       },
       "messageInput": {
@@ -1449,7 +1455,8 @@
         "attachedResources": "Ressources jointes",
         "loading": "Chargement...",
         "error": "Erreur : {message}",
-        "emptyConversation": "Aucun message dans cette conversation."
+        "emptyConversation": "Aucun message dans cette conversation.",
+        "systemMessage": "Message système"
       },
       "liveTurnStats": {
         "thinking": "Réflexion...",

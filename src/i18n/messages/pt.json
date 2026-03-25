@@ -127,6 +127,7 @@
     "languageSaveSuccess": "As configurações de idioma foram salvas",
     "languageSaveFailed": "Falha ao salvar as configurações de idioma: {message}",
     "updateTitle": "Atualização do app",
+    "versionTitle": "Atualização de software",
     "updateDescription": "Verifique versões mais novas na fonte de releases configurada e instale diretamente quando disponíveis.",
     "currentVersion": "Versão atual",
     "upgradableVersion": "Versão mais recente",
@@ -613,6 +614,7 @@
       "openClawSaved": "Configuração do OpenClaw salva",
       "saveOpenClawFailed": "Falha ao salvar configuração do OpenClaw",
       "configSaved": "Configuração salva",
+      "configSavedHint": "Sessões existentes precisam ser reabertas para que as alterações tenham efeito",
       "saveConfigManagementFailed": "Falha ao salvar o gerenciamento de configuração"
     },
     "version": {
@@ -870,7 +872,10 @@
       "next": "Próximo",
       "jumpToLine": "Ir para a linha {line}",
       "noParsedDiffSections": "Sem seções de diff analisadas",
-      "loadingEditor": "Carregando editor..."
+      "loadingEditor": "Carregando editor...",
+      "imageZoomIn": "Ampliar",
+      "imageZoomOut": "Reduzir",
+      "imageZoomReset": "Redefinir zoom"
     },
     "branchDropdown": {
       "toasts": {
@@ -1038,6 +1043,7 @@
     "pushWindow": {
       "title": "Enviar código",
       "noUnpushedCommits": "Nenhum commit não enviado",
+      "newBranchNoPushedCommits": "Nova branch — enviar para criar branch de rastreamento remota",
       "unpushed": "Não enviado",
       "selectFileToViewDiff": "Selecione um arquivo para ver as diferenças",
       "before": "Antes",
@@ -1356,7 +1362,7 @@
       },
       "chatInput": {
         "connecting": "Conectando...",
-        "agentResponding": "O agente está respondendo...",
+        "agentResponding": "{agent} está respondendo...",
         "sendMessage": "Envie uma mensagem..."
       },
       "messageInput": {
@@ -1449,7 +1455,8 @@
         "attachedResources": "Recursos anexados",
         "loading": "Carregando...",
         "error": "Erro: {message}",
-        "emptyConversation": "Nenhuma mensagem nesta conversa."
+        "emptyConversation": "Nenhuma mensagem nesta conversa.",
+        "systemMessage": "Mensagem do sistema"
       },
       "liveTurnStats": {
         "thinking": "Pensando...",

@@ -127,6 +127,7 @@
     "languageSaveSuccess": "语言设置已保存",
     "languageSaveFailed": "语言设置保存失败：{message}",
     "updateTitle": "应用升级",
+    "versionTitle": "软件更新",
     "updateDescription": "点击检查后会从配置的发布源拉取最新版本信息，有新版本时可直接下载并安装。",
     "currentVersion": "当前版本",
     "upgradableVersion": "最新版本",
@@ -613,6 +614,7 @@
       "openClawSaved": "OpenClaw 配置已保存",
       "saveOpenClawFailed": "保存 OpenClaw 配置失败",
       "configSaved": "配置已保存",
+      "configSavedHint": "已有会话需要重新打开才能生效",
       "saveConfigManagementFailed": "保存配置管理失败"
     },
     "version": {
@@ -870,7 +872,10 @@
       "next": "下一个",
       "jumpToLine": "跳转到第 {line} 行",
       "noParsedDiffSections": "未解析到差异区块",
-      "loadingEditor": "编辑器加载中..."
+      "loadingEditor": "编辑器加载中...",
+      "imageZoomIn": "放大",
+      "imageZoomOut": "缩小",
+      "imageZoomReset": "重置缩放"
     },
     "branchDropdown": {
       "toasts": {
@@ -1038,6 +1043,7 @@
     "pushWindow": {
       "title": "推送代码",
       "noUnpushedCommits": "没有未推送的提交",
+      "newBranchNoPushedCommits": "新分支 — 推送以创建远程跟踪分支",
       "unpushed": "未推送",
       "selectFileToViewDiff": "选择文件查看差异",
       "before": "修改前",
@@ -1356,7 +1362,7 @@
       },
       "chatInput": {
         "connecting": "连接中...",
-        "agentResponding": "Agent 正在响应...",
+        "agentResponding": "{agent} 正在响应...",
         "sendMessage": "发送消息..."
       },
       "messageInput": {
@@ -1389,7 +1395,7 @@
         "openAgentsSettings": "打开 Agents 设置"
       },
       "agentPlanOverlay": {
-        "title": "Agent 计划",
+        "title": "计划任务",
         "collapsePlanAria": "折叠计划",
         "collapsedSummary": "计划 {completed}/{total}",
         "status": {
@@ -1449,7 +1455,8 @@
         "attachedResources": "附加资源",
         "loading": "加载中...",
         "error": "错误：{message}",
-        "emptyConversation": "当前会话暂无消息。"
+        "emptyConversation": "当前会话暂无消息。",
+        "systemMessage": "系统消息"
       },
       "liveTurnStats": {
         "thinking": "思考中...",

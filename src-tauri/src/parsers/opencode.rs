@@ -187,7 +187,8 @@ impl OpenCodeParser {
             .ok_or_else(|| ParseError::ConversationNotFound(conversation_id.to_string()))?;
 
         let messages = self.load_sqlite_messages(&conn, conversation_id).await?;
-        let turns = group_into_turns(messages);
+        let mut turns = group_into_turns(messages);
+        super::relocate_orphaned_tool_results(&mut turns);
         let context_window_used_tokens = super::latest_turn_total_usage_tokens(&turns);
         let context_window_max_tokens =
             super::infer_context_window_max_tokens(summary.model.as_deref());
@@ -667,9 +668,10 @@ fn group_into_turns(messages: Vec<UnifiedMessage>) -> Vec<MessageTurn> {
             let timestamp = msg.timestamp;
             i += 1;
 
+            // Only absorb immediately following Tool messages
+            // (stop at the next assistant message to keep turns small for virtualization)
             while i < messages.len()
-                && (matches!(messages[i].role, MessageRole::Assistant)
-                    || matches!(messages[i].role, MessageRole::Tool))
+                && matches!(messages[i].role, MessageRole::Tool)
             {
                 blocks.extend(messages[i].content.clone());
                 if usage.is_none() {
